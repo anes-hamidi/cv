@@ -8,10 +8,32 @@ import { QrCode } from "lucide-react";
 import { AIRecommender } from "@/components/pos/AIRecommender";
 import { QRCodeScannerDialog } from "@/components/pos/QRCodeScannerDialog";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ProductListMobile } from "@/components/pos/ProductListMobile";
 
 export default function Home() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+        <div className="md:col-span-2">
+          <ProductListMobile onScanClick={() => setIsScannerOpen(true)} />
+        </div>
+        <div className="md:col-span-1">
+          <div className="space-y-4">
+            <Cart />
+            <AIRecommender />
+          </div>
+        </div>
+        <QRCodeScannerDialog
+          open={isScannerOpen}
+          onOpenChange={setIsScannerOpen}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-0 h-[calc(100vh-3.5rem)] bg-muted/20">
@@ -44,5 +66,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
