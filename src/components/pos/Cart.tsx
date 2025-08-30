@@ -10,12 +10,10 @@ import { X, ShoppingCart, Trash2 } from "lucide-react";
 import type { Sale } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/components/ui/sidebar";
 
 export function Cart() {
   const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale } = usePOS();
   const { toast } = useToast();
-  const { state: sidebarState } = useSidebar();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -62,7 +60,7 @@ export function Cart() {
   };
 
   return (
-    <Card className={cn("flex flex-col flex-1", sidebarState === "collapsed" && "hidden")}>
+    <Card className="flex flex-col flex-1">
       <CardHeader className="flex flex-row items-center justify-between p-4">
         <CardTitle className="font-headline text-lg flex items-center"><ShoppingCart className="mr-2 h-5 w-5"/>Cart</CardTitle>
         {cart.length > 0 && (

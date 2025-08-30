@@ -7,13 +7,11 @@ import type { SuggestRelatedProductsOutput } from "@/ai/flows/suggest-related-pr
 import { usePOS } from "@/context/POSContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useSidebar } from "@/components/ui/sidebar";
 
 export function AIRecommender() {
   const { cart, sales, products, addToCart } = usePOS();
   const [suggestion, setSuggestion] = useState<SuggestRelatedProductsOutput | null>(null);
   const [isPending, startTransition] = useTransition();
-  const { state: sidebarState } = useSidebar();
 
 
   useEffect(() => {
@@ -56,7 +54,7 @@ export function AIRecommender() {
   if (!cart.length) return null;
 
   return (
-    <div className={cn("rounded-lg border bg-card text-card-foreground", sidebarState === "collapsed" && "hidden")}>
+    <div className="rounded-lg border bg-card text-card-foreground">
       <div className="p-4">
         <div className="flex items-center">
           <Lightbulb className="h-5 w-5 mr-3 text-accent" />
