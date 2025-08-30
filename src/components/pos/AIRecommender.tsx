@@ -17,25 +17,31 @@ export function AIRecommender() {
 
 
   useEffect(() => {
-    if (cart.length > 0) {
-      startTransition(async () => {
-        try {
-          const pastPurchases = sales.flatMap((s) => s.items.map((i) => i.name));
-          const uniquePastPurchases = [...new Set(pastPurchases)];
+    const handler = setTimeout(() => {
+      if (cart.length > 0) {
+        startTransition(async () => {
+          try {
+            const pastPurchases = sales.flatMap((s) => s.items.map((i) => i.name));
+            const uniquePastPurchases = [...new Set(pastPurchases)];
 
-          const result = await suggestRelatedProducts({
-            currentItems: cart.map((item) => item.name),
-            pastPurchaseData: JSON.stringify(uniquePastPurchases),
-          });
-          setSuggestion(result);
-        } catch (error) {
-          console.error("AI suggestion failed:", error);
-          setSuggestion(null);
-        }
-      });
-    } else {
-      setSuggestion(null);
-    }
+            const result = await suggestRelatedProducts({
+              currentItems: cart.map((item) => item.name),
+              pastPurchaseData: JSON.stringify(uniquePastPurchases),
+            });
+            setSuggestion(result);
+          } catch (error) {
+            console.error("AI suggestion failed:", error);
+            setSuggestion(null);
+          }
+        });
+      } else {
+        setSuggestion(null);
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [cart, sales]);
 
   const handleAddSuggestion = () => {
