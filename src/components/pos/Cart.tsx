@@ -41,13 +41,22 @@ export function Cart() {
   };
 
   const handlePrintReceipt = async (sale: Sale) => {
+    
+    if (!navigator.bluetooth) {
+      console.error("Web Bluetooth API is not available in this browser.");
+      toast({
+        variant: "destructive",
+        title: "Bluetooth Not Supported",
+        description: "Your browser does not support Web Bluetooth. Cannot print.",
+      });
+      return;
+    }
+    
     toast({
       title: "Printing receipt...",
-      description: "Please select your Bluetooth printer.",
+      description: "Please select your Bluetooth printer from the list.",
     });
 
-    // In a real implementation, you would format this data
-    // into a specific format for your printer (e.g., ESC/POS commands).
     let receiptText = "OfflinePOS Receipt\n";
     receiptText += "----------------------\n";
     receiptText += `Sale ID: ${sale.id.substring(0, 8)}...\n`;
@@ -61,39 +70,44 @@ export function Cart() {
     receiptText += `Total: $${sale.total.toFixed(2)}\n\n`;
     receiptText += "Thank you!\n\n\n";
 
-    if (!navigator.bluetooth) {
-      console.error("Web Bluetooth API is not available in this browser.");
-      toast({
-        variant: "destructive",
-        title: "Bluetooth Not Supported",
-        description: "Your browser does not support Web Bluetooth.",
-      });
-      console.log("--- Receipt (for console) ---");
-      console.log(receiptText);
-      return;
-    }
-
     try {
-      // Request a Bluetooth device. You may need to filter by services
-      // supported by your specific printer model.
+      // Request a Bluetooth device. This will trigger a permission prompt in the browser.
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true, // For demo purposes, you should filter this in production
-        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Example service UUID for a printer
+        acceptAllDevices: true, // For demo purposes, you should filter this in production by service UUIDs.
+        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Example service UUID for a thermal printer
       });
       
-      toast({ title: "Connecting to device..." });
+      if(!device.gatt) {
+        toast({
+            variant: "destructive",
+            title: "Connection Failed",
+            description: "Could not connect to the GATT server of the device.",
+        });
+        return;
+      }
+      
+      toast({ title: `Connecting to ${device.name}...` });
 
-      const server = await device.gatt?.connect();
+      const server = await device.gatt.connect();
+      
+      toast({ title: `Connected to ${device.name}. Getting service...` });
       
       // IMPORTANT: Replace with the actual service and characteristic UUIDs
       // for your Bluetooth printer.
-      const service = await server?.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
-      const characteristic = await service?.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+      const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
+      const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+
+      toast({ title: 'Sending data to printer...'});
 
       const encoder = new TextEncoder();
       const data = encoder.encode(receiptText);
       
-      await characteristic?.writeValue(data);
+      // Write data in chunks if it's too large for a single write
+      const chunkSize = 100; // Adjust chunk size based on your printer's capability
+      for (let i = 0; i < data.length; i += chunkSize) {
+        const chunk = data.slice(i, i + chunkSize);
+        await characteristic.writeValue(chunk);
+      }
 
       toast({
         title: "Receipt Sent",
@@ -102,11 +116,19 @@ export function Cart() {
 
     } catch (error) {
       console.error("Bluetooth printing failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Printing Failed",
-        description: "Could not connect to the printer. See console for details.",
-      });
+      if (error instanceof DOMException && error.name === 'NotFoundError') {
+        toast({
+            variant: "destructive",
+            title: "Printing Cancelled",
+            description: "No printer was selected.",
+        });
+      } else {
+         toast({
+            variant: "destructive",
+            title: "Printing Failed",
+            description: "Could not connect to the printer. See console for details.",
+         });
+      }
     }
   };
 
