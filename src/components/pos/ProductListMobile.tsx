@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { QrCode, Plus, Minus } from "lucide-react";
 import type { Product } from "@/types";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface ProductListMobileProps {
   onScanClick: () => void;
@@ -49,7 +50,13 @@ export function ProductListMobile({ onScanClick }: ProductListMobileProps) {
         {products.map((product) => {
           const quantity = getCartQuantity(product.id);
           return (
-            <div key={product.id} className="flex items-center gap-4 p-2 rounded-lg border bg-card">
+            <div 
+              key={product.id} 
+              className={cn(
+                "flex items-center gap-4 p-2 rounded-lg border bg-card transition-all duration-200",
+                quantity > 0 && "border-primary shadow-lg bg-primary/5"
+              )}
+            >
               <Image
                 src={product.imageUrl || 'https://picsum.photos/seed/product/100/100'}
                 alt={product.name}
