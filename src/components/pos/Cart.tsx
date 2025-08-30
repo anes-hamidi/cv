@@ -9,10 +9,13 @@ import { Input } from "@/components/ui/input";
 import { X, ShoppingCart, Trash2 } from "lucide-react";
 import type { Sale } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function Cart() {
   const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale } = usePOS();
   const { toast } = useToast();
+  const { state: sidebarState } = useSidebar();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -56,31 +59,12 @@ export function Cart() {
       title: "Receipt sent to console",
       description: "Bluetooth printer integration required for physical printing.",
     });
-
-    // NOTE: Real Bluetooth printing logic would go here.
-    // This requires using the Web Bluetooth API, which is complex and requires user permissions.
-    // The following is a commented-out example:
-    /*
-    async function print() {
-      if (!navigator.bluetooth) {
-        alert("Web Bluetooth API is not available.");
-        return;
-      }
-      try {
-        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-        // ... connect and send data to printer
-      } catch(error) {
-        console.error("Bluetooth error:", error);
-      }
-    }
-    print();
-    */
   };
 
   return (
-    <Card className="sticky top-20">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-headline flex items-center"><ShoppingCart className="mr-2"/>Cart</CardTitle>
+    <Card className={cn("flex flex-col flex-1", sidebarState === "collapsed" && "hidden")}>
+      <CardHeader className="flex flex-row items-center justify-between p-4">
+        <CardTitle className="font-headline text-lg flex items-center"><ShoppingCart className="mr-2 h-5 w-5"/>Cart</CardTitle>
         {cart.length > 0 && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={clearCart}>
             <Trash2 className="h-4 w-4" />
@@ -88,27 +72,29 @@ export function Cart() {
           </Button>
         )}
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-64">
+      <CardContent className="p-4 flex-1">
+        <ScrollArea className="h-full">
           {cart.length === 0 ? (
-            <p className="text-muted-foreground text-center">Your cart is empty.</p>
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground text-center">Your cart is empty.</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between">
-                  <div className="flex-grow">
-                    <p className="font-medium">{item.name}</p>
+                <div key={item.productId} className="flex items-center justify-between gap-2">
+                  <div className="flex-grow overflow-hidden">
+                    <p className="font-medium truncate">{item.name}</p>
                     <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Input
                       type="number"
                       min="1"
                       value={item.quantity}
                       onChange={(e) => updateCartItemQuantity(item.productId, parseInt(e.target.value) || 1)}
-                      className="h-8 w-16 text-center"
+                      className="h-8 w-14 text-center"
                     />
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFromCart(item.productId)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFromCart(item.productId)}>
                       <X className="h-4 w-4" />
                       <span className="sr-only">Remove item</span>
                     </Button>
@@ -120,8 +106,7 @@ export function Cart() {
         </ScrollArea>
       </CardContent>
       {cart.length > 0 && (
-        <CardFooter className="flex-col">
-          <Separator className="my-4" />
+        <CardFooter className="flex-col p-4 border-t">
           <div className="w-full flex justify-between items-center text-lg font-semibold">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>

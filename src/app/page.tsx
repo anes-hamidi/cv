@@ -7,17 +7,40 @@ import { QrCode } from "lucide-react";
 import { AIRecommender } from "@/components/pos/AIRecommender";
 import { QRCodeScannerDialog } from "@/components/pos/QRCodeScannerDialog";
 import { useState } from "react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function Home() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2">
+    <SidebarProvider>
+      <Sidebar side="right" variant="sidebar" collapsible="icon">
+        <SidebarHeader>
+            <h2 className="text-xl font-semibold font-headline">Cart & Checkout</h2>
+        </SidebarHeader>
+        <SidebarContent className="p-2 flex flex-col gap-4">
+            <Cart />
+            <AIRecommender />
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className="p-4 md:p-6">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold font-headline">Products</h1>
-            <QRCodeScannerDialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+            <div className="flex items-center gap-2">
+               <SidebarTrigger className="md:hidden" />
+               <h1 className="text-2xl font-bold font-headline">Products</h1>
+            </div>
+            <QRCodeScannerDialog
+              open={isScannerOpen}
+              onOpenChange={setIsScannerOpen}
+            >
               <Button variant="outline" onClick={() => setIsScannerOpen(true)}>
                 <QrCode className="mr-2 h-4 w-4" />
                 Scan QR Code
@@ -26,11 +49,7 @@ export default function Home() {
           </div>
           <ProductGrid />
         </div>
-        <div className="space-y-6">
-          <Cart />
-          <AIRecommender />
-        </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

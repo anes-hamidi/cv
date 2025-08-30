@@ -6,11 +6,15 @@ import { suggestRelatedProducts } from "@/ai/flows/suggest-related-products";
 import type { SuggestRelatedProductsOutput } from "@/ai/flows/suggest-related-products";
 import { usePOS } from "@/context/POSContext";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function AIRecommender() {
   const { cart, sales, products, addToCart } = usePOS();
   const [suggestion, setSuggestion] = useState<SuggestRelatedProductsOutput | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { state: sidebarState } = useSidebar();
+
 
   useEffect(() => {
     if (cart.length > 0) {
@@ -46,18 +50,18 @@ export function AIRecommender() {
   if (!cart.length) return null;
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground">
+    <div className={cn("rounded-lg border bg-card text-card-foreground", sidebarState === "collapsed" && "hidden")}>
       <div className="p-4">
         <div className="flex items-center">
           <Lightbulb className="h-5 w-5 mr-3 text-accent" />
-          <h3 className="font-semibold font-headline text-accent">Intelligent Suggestion</h3>
+          <h3 className="font-semibold font-headline text-accent text-lg">Suggestion</h3>
         </div>
       </div>
       <div className="p-4 pt-0">
         {isPending ? (
           <div className="flex items-center text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating suggestion...
+            Generating...
           </div>
         ) : suggestion?.suggestion ? (
           <div>
@@ -69,7 +73,7 @@ export function AIRecommender() {
             </Button>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No suggestions at the moment.</p>
+          <p className="text-sm text-muted-foreground">No suggestions right now.</p>
         )}
       </div>
     </div>
