@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePOS } from "@/context/POSContext";
@@ -60,9 +61,9 @@ export function Cart() {
   };
 
   return (
-    <Card className="flex flex-col flex-1">
-      <CardHeader className="flex flex-row items-center justify-between p-4">
-        <CardTitle className="font-headline text-lg flex items-center"><ShoppingCart className="mr-2 h-5 w-5"/>Cart</CardTitle>
+    <Card className="flex flex-col flex-1 shadow-none border-0">
+      <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+        <CardTitle className="font-headline text-xl flex items-center"><ShoppingCart className="mr-3 h-6 w-6 text-primary"/>Current Sale</CardTitle>
         {cart.length > 0 && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={clearCart}>
             <Trash2 className="h-4 w-4" />
@@ -71,10 +72,14 @@ export function Cart() {
         )}
       </CardHeader>
       <CardContent className="p-4 flex-1">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full pr-4 -mr-4">
           {cart.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground text-center">Your cart is empty.</p>
+              <div className="text-center text-muted-foreground p-8">
+                <ShoppingCart className="mx-auto h-12 w-12 mb-4" />
+                <p>Your cart is empty.</p>
+                <p className="text-sm">Select products to get started.</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -104,12 +109,23 @@ export function Cart() {
         </ScrollArea>
       </CardContent>
       {cart.length > 0 && (
-        <CardFooter className="flex-col p-4 border-t">
-          <div className="w-full flex justify-between items-center text-lg font-semibold">
+        <CardFooter className="flex-col p-4 pt-0 border-t mt-auto">
+           <div className="w-full py-4 space-y-2 text-sm">
+             <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>${total.toFixed(2)}</span>
+             </div>
+             <div className="flex justify-between">
+                <span className="text-muted-foreground">Taxes</span>
+                <span>$0.00</span>
+             </div>
+           </div>
+          <Separator />
+          <div className="w-full flex justify-between items-center text-lg font-bold py-4">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
           </div>
-          <Button className="w-full mt-4 bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleCheckout}>
+          <Button className="w-full text-lg h-12 bg-primary hover:bg-primary/90" onClick={handleCheckout}>
             Checkout
           </Button>
         </CardFooter>
@@ -117,3 +133,5 @@ export function Cart() {
     </Card>
   );
 }
+
+    
