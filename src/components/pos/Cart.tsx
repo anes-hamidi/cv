@@ -47,7 +47,7 @@ export function Cart() {
       toast({
         variant: "destructive",
         title: "Bluetooth Not Supported",
-        description: "Your browser does not support Web Bluetooth. Cannot print.",
+        description: "Your browser or environment does not support or allow Web Bluetooth.",
       });
       return;
     }
@@ -122,7 +122,14 @@ export function Cart() {
             title: "Printing Cancelled",
             description: "No printer was selected.",
         });
-      } else {
+      } else if (error instanceof Error && error.message.includes('Permissions-Policy')) {
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "Bluetooth access is disallowed by your browser or the site's permissions policy.",
+        });
+      }
+       else {
          toast({
             variant: "destructive",
             title: "Printing Failed",
