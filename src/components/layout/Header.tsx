@@ -21,7 +21,7 @@ export function Header() {
       <div className="container flex h-14 items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Package2 className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline">Liveryly</span>
+          <span className="hidden font-bold font-headline md:inline">Liveryly</span>
         </Link>
         <nav className="flex items-center space-x-1 text-sm font-medium">
           {navLinks.map((link) => (
