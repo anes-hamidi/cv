@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { X, ShoppingCart, Trash2 } from "lucide-react";
+import { X, ShoppingCart, Trash2, Printer } from "lucide-react";
 import type { Sale } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,32 +33,83 @@ export function Cart() {
       description: `Total: $${newSale.total.toFixed(2)}.`,
       action: (
         <Button variant="outline" size="sm" onClick={() => handlePrintReceipt(newSale)}>
+          <Printer className="mr-2 h-4 w-4" />
           Print Receipt
         </Button>
       ),
     });
   };
 
-  const handlePrintReceipt = (sale: Sale) => {
-    console.log("--- Printing Receipt ---");
-    console.log("OfflinePOS Receipt");
-    console.log("----------------------");
-    console.log(`Sale ID: ${sale.id}`);
-    console.log(`Date: ${new Date(sale.date).toLocaleString()}`);
-    console.log("\nItems:");
-    sale.items.forEach(item => {
-      console.log(`${item.name} (x${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`);
-    });
-    console.log("----------------------");
-    console.log(`Total: $${sale.total.toFixed(2)}`);
-    console.log("\nThank you!");
-    console.log("--- End of Receipt ---");
-
+  const handlePrintReceipt = async (sale: Sale) => {
     toast({
-      title: "Receipt sent to console",
-      description: "Bluetooth printer integration required for physical printing.",
+      title: "Printing receipt...",
+      description: "Please select your Bluetooth printer.",
     });
+
+    // In a real implementation, you would format this data
+    // into a specific format for your printer (e.g., ESC/POS commands).
+    let receiptText = "OfflinePOS Receipt\n";
+    receiptText += "----------------------\n";
+    receiptText += `Sale ID: ${sale.id.substring(0, 8)}...\n`;
+    receiptText += `Date: ${new Date(sale.date).toLocaleString()}\n\n`;
+    receiptText += "Items:\n";
+    sale.items.forEach(item => {
+      const itemTotal = (item.price * item.quantity).toFixed(2);
+      receiptText += `${item.name} (x${item.quantity}) - $${itemTotal}\n`;
+    });
+    receiptText += "----------------------\n";
+    receiptText += `Total: $${sale.total.toFixed(2)}\n\n`;
+    receiptText += "Thank you!\n\n\n";
+
+    if (!navigator.bluetooth) {
+      console.error("Web Bluetooth API is not available in this browser.");
+      toast({
+        variant: "destructive",
+        title: "Bluetooth Not Supported",
+        description: "Your browser does not support Web Bluetooth.",
+      });
+      console.log("--- Receipt (for console) ---");
+      console.log(receiptText);
+      return;
+    }
+
+    try {
+      // Request a Bluetooth device. You may need to filter by services
+      // supported by your specific printer model.
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true, // For demo purposes, you should filter this in production
+        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Example service UUID for a printer
+      });
+      
+      toast({ title: "Connecting to device..." });
+
+      const server = await device.gatt?.connect();
+      
+      // IMPORTANT: Replace with the actual service and characteristic UUIDs
+      // for your Bluetooth printer.
+      const service = await server?.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
+      const characteristic = await service?.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(receiptText);
+      
+      await characteristic?.writeValue(data);
+
+      toast({
+        title: "Receipt Sent",
+        description: "The receipt was sent to the printer.",
+      });
+
+    } catch (error) {
+      console.error("Bluetooth printing failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Printing Failed",
+        description: "Could not connect to the printer. See console for details.",
+      });
+    }
   };
+
 
   return (
     <Card className="flex flex-col flex-1 shadow-none border-0">
@@ -133,5 +184,3 @@ export function Cart() {
     </Card>
   );
 }
-
-    
