@@ -19,9 +19,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
+import type { Sale } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 export function SalesHistory() {
-  const { sales, customers } = usePOS();
+  const { sales, customers, products } = usePOS();
+  const { toast } = useToast();
 
   const customerMap = useMemo(() => {
     return new Map(customers.map(c => [c.id, c.name]));
@@ -29,6 +34,113 @@ export function SalesHistory() {
 
   const totalSalesCount = sales.length;
   const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+
+  const handlePrintReceipt = async (sale: Sale) => {
+    
+    if (!navigator.bluetooth) {
+      console.error("Web Bluetooth API is not available in this browser.");
+      toast({
+        variant: "destructive",
+        title: "Bluetooth Not Supported",
+        description: "Your browser or environment does not support or allow Web Bluetooth.",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Printing receipt...",
+      description: "Please select your Bluetooth printer from the list.",
+    });
+
+    const totalItemsInCart = sale.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    let receiptText = "OfflinePOS Receipt\n";
+    receiptText += "----------------------\n";
+    receiptText += `Sale ID: ${sale.id.substring(0, 8)}...\n`;
+    receiptText += `Date: ${new Date(sale.date).toLocaleString()}\n\n`;
+    if (sale.customerId && customerMap.has(sale.customerId)) {
+      receiptText += `Customer: ${customerMap.get(sale.customerId)}\n`;
+    }
+    receiptText += "Items:\n";
+    sale.items.forEach(item => {
+      const itemTotal = (item.price * item.quantity).toFixed(2);
+      receiptText += `${item.name} (x${item.quantity}) - ${itemTotal} DZ\n`;
+    });
+    receiptText += "----------------------\n";
+    receiptText += `Total: ${sale.total.toFixed(2)} DZ\n`;
+    receiptText += `Total Items: ${totalItemsInCart}\n`;
+    receiptText += "----------------------\n";
+    receiptText += "Thank you!\n\n\n";
+
+    try {
+      // Request a Bluetooth device. This will trigger a permission prompt in the browser.
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true, // For demo purposes, you should filter this in production by service UUIDs.
+        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Example service UUID for a thermal printer
+      });
+      
+      if(!device.gatt) {
+        toast({
+            variant: "destructive",
+            title: "Connection Failed",
+            description: "Could not connect to the GATT server of the device.",
+        });
+        return;
+      }
+      
+      toast({ title: `Connecting to ${device.name}...` });
+
+      const server = await device.gatt.connect();
+      
+      toast({ title: `Connected to ${device.name}. Getting service...` });
+      
+      // IMPORTANT: Replace with the actual service and characteristic UUIDs
+      // for your Bluetooth printer.
+      const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
+      const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+
+      toast({ title: 'Sending data to printer...'});
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(receiptText);
+      
+      // Write data in chunks if it's too large for a single write
+      const chunkSize = 100; // Adjust chunk size based on your printer's capability
+      for (let i = 0; i < data.length; i += chunkSize) {
+        const chunk = data.slice(i, i + chunkSize);
+        await characteristic.writeValue(chunk);
+      }
+
+      toast({
+        title: "Receipt Sent",
+        description: "The receipt was sent to the printer.",
+      });
+
+    } catch (error) {
+      console.error("Bluetooth printing failed:", error);
+      if (error instanceof DOMException && error.name === 'NotFoundError') {
+        toast({
+            variant: "destructive",
+            title: "Printing Cancelled",
+            description: "No printer was selected.",
+        });
+      } else if (error instanceof Error && error.message.includes('Permissions-Policy')) {
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "Bluetooth access is disallowed by your browser or the site's permissions policy.",
+        });
+      }
+       else {
+         toast({
+            variant: "destructive",
+            title: "Printing Failed",
+            description: "Could not connect to the printer. See console for details.",
+         });
+      }
+    }
+  };
+
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
@@ -64,15 +176,16 @@ export function SalesHistory() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-1/2">Sale Details</TableHead>
+              <TableHead className="w-2/5">Sale Details</TableHead>
               <TableHead>Items</TableHead>
               <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sales.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">No sales recorded yet.</TableCell>
+                    <TableCell colSpan={4} className="h-24 text-center">No sales recorded yet.</TableCell>
                 </TableRow>
             ) : (
                 sales.map((sale) => (
@@ -106,6 +219,12 @@ export function SalesHistory() {
                     </TableCell>
                     <TableCell className="text-right font-semibold text-primary">
                         {sale.total.toFixed(2)} DZ
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handlePrintReceipt(sale)}>
+                            <Printer className="h-4 w-4" />
+                            <span className="sr-only">Print Receipt</span>
+                        </Button>
                     </TableCell>
                 </TableRow>
                 ))
