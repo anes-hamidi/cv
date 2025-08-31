@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SettingsPage() {
-  const { products, sales, setProducts, setSales } = usePOS();
+  const { products, sales, customers, setProducts, setSales, setCustomers } = usePOS();
   const { toast } = useToast();
   const [fileToRestore, setFileToRestore] = useState<File | null>(null);
 
@@ -31,6 +31,7 @@ export default function SettingsPage() {
       const backupData = {
         products,
         sales,
+        customers,
         backupDate: new Date().toISOString(),
       };
       const jsonString = JSON.stringify(backupData, null, 2);
@@ -85,15 +86,16 @@ export default function SettingsPage() {
         }
         const restoredData = JSON.parse(text);
 
-        if (Array.isArray(restoredData.products) && Array.isArray(restoredData.sales)) {
+        if (Array.isArray(restoredData.products) && Array.isArray(restoredData.sales) && Array.isArray(restoredData.customers)) {
           setProducts(restoredData.products);
           setSales(restoredData.sales);
+          setCustomers(restoredData.customers);
           toast({
             title: "Restore Successful",
             description: "Your data has been restored from the backup.",
           });
         } else {
-          throw new Error("Invalid backup file format.");
+          throw new Error("Invalid backup file format. It must contain products, sales, and customers arrays.");
         }
       } catch (error) {
         console.error("Restore failed:", error);
@@ -124,7 +126,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Data Backup</CardTitle>
             <CardDescription>
-              Download a JSON file containing all of your products and sales history. 
+              Download a JSON file containing all of your products, sales, and customer data. 
               Keep this file in a safe place to prevent data loss.
             </CardDescription>
           </CardHeader>
@@ -162,7 +164,7 @@ export default function SettingsPage() {
                         <AlertDialogTitle className="flex items-center"><AlertTriangle className="mr-2 text-destructive"/>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                         This action cannot be undone. Restoring from a backup will
-                        <span className="font-semibold text-destructive"> permanently overwrite</span> all current products and sales data.
+                        <span className="font-semibold text-destructive"> permanently overwrite</span> all current products, sales, and customer data.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
