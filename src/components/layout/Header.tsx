@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Package2, Home, List, BarChart, Menu } from "lucide-react";
+import { Package2, Home, List, BarChart, Menu, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,9 @@ const navLinks = [
   { href: "/products", label: "Products", icon: List },
   { href: "/sales", label: "Sales", icon: BarChart },
 ];
+
+const settingsLink = { href: "/settings", label: "Settings", icon: Settings };
+
 
 export function Header() {
   const pathname = usePathname();
@@ -32,7 +36,7 @@ export function Header() {
         </Link>
         
         {/* Desktop Navigation */}
-        <nav className="hidden items-center space-x-1 text-sm font-medium md:flex">
+        <nav className="hidden items-center space-x-1 text-sm font-medium md:flex flex-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -55,6 +59,26 @@ export function Header() {
               )}
             </Link>
           ))}
+          <div className="flex-grow" />
+           <Link
+              href={settingsLink.href}
+              className={cn(
+                "relative rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent/50 hover:text-foreground",
+                pathname === settingsLink.href ? "text-foreground" : "text-foreground/60"
+              )}
+            >
+              <span className="relative z-10 flex items-center">
+                <settingsLink.icon className="mr-2 h-4 w-4" />
+                {settingsLink.label}
+              </span>
+              {pathname === settingsLink.href && (
+                <motion.div
+                  layoutId="active-nav-link-settings"
+                  className="absolute inset-0 rounded-md bg-accent"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+            </Link>
         </nav>
 
         {/* Mobile Navigation */}
@@ -75,6 +99,13 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                  <Link href={settingsLink.href} className={cn(pathname === settingsLink.href && "bg-accent")}>
+                    <settingsLink.icon className="mr-2 h-4 w-4" />
+                    {settingsLink.label}
+                  </Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -1,13 +1,14 @@
 
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from "react";
 import type { Product, CartItem, Sale } from "@/types";
 import { INITIAL_PRODUCTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
 interface POSContextType {
   products: Product[];
+  setProducts: Dispatch<SetStateAction<Product[]>>;
   addOrUpdateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   cart: CartItem[];
@@ -16,6 +17,7 @@ interface POSContextType {
   updateCartItemQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   sales: Sale[];
+  setSales: Dispatch<SetStateAction<Sale[]>>;
   completeSale: () => Sale;
 }
 
@@ -168,6 +170,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     products,
+    setProducts,
     addOrUpdateProduct,
     deleteProduct,
     cart,
@@ -176,6 +179,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     updateCartItemQuantity,
     clearCart,
     sales,
+    setSales,
     completeSale,
   };
 
