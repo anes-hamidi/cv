@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Circuit } from "@/types";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { allMunicipalities } from "@/lib/algeria-localities";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, PlusCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import React from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  municipalities: z.array(z.object({ value: z.string().min(1, "Municipality cannot be empty.") })).min(1, "At least one municipality is required."),
+  municipalities: z.array(z.string()).min(1, "At least one municipality is required."),
 });
 
 type CircuitFormData = z.infer<typeof formSchema>;
@@ -35,25 +41,13 @@ export function CircuitForm({ circuit, onSubmit, onClose }: CircuitFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: circuit?.name || "",
-      municipalities: circuit?.municipalities.map(m => ({ value: m })) || [{value: ""}],
+      municipalities: circuit?.municipalities || [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "municipalities"
-  });
-
-  const handleFormSubmit = (values: CircuitFormData) => {
-    onSubmit({
-        name: values.name,
-        municipalities: values.municipalities.map(m => m.value),
-    })
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -68,41 +62,71 @@ export function CircuitForm({ circuit, onSubmit, onClose }: CircuitFormProps) {
           )}
         />
         
-        <div>
-            <FormLabel>Municipalities</FormLabel>
-            <div className="space-y-2 mt-2">
-                {fields.map((field, index) => (
-                    <FormField
-                        key={field.id}
-                        control={form.control}
-                        name={`municipalities.${index}.value`}
-                        render={({field}) => (
-                            <FormItem>
-                                <div className="flex items-center gap-2">
-                                    <FormControl>
-                                        <Input {...field} placeholder="Enter a municipality name"/>
-                                    </FormControl>
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
-                                        <Trash2 className="h-4 w-4 text-destructive"/>
-                                    </Button>
+        <FormField
+          control={form.control}
+          name="municipalities"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Municipalities</FormLabel>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <FormControl>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                    "w-full justify-between h-auto min-h-10",
+                                    !field.value?.length && "text-muted-foreground"
+                                )}
+                            >
+                                <div className="flex gap-1 flex-wrap">
+                                    {field.value.length > 0 ? field.value.map((m) => (
+                                        <Badge variant="secondary" key={m}>{m}</Badge>
+                                    )) : "Select municipalities"}
                                 </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                ))}
-            </div>
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => append({value: ""})}
-            >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Municipality
-            </Button>
-        </div>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                            <CommandInput placeholder="Search municipality..." />
+                            <CommandList>
+                                <CommandEmpty>No municipality found.</CommandEmpty>
+                                <CommandGroup>
+                                    {allMunicipalities.map((municipality) => (
+                                        <CommandItem
+                                            value={municipality.label}
+                                            key={municipality.value}
+                                            onSelect={() => {
+                                                const currentValues = form.getValues("municipalities");
+                                                if (currentValues.includes(municipality.value)) {
+                                                    form.setValue("municipalities", currentValues.filter(v => v !== municipality.value));
+                                                } else {
+                                                    form.setValue("municipalities", [...currentValues, municipality.value]);
+                                                }
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    field.value.includes(municipality.value)
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                )}
+                                            />
+                                            {municipality.label}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
