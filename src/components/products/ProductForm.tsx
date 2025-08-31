@@ -18,11 +18,12 @@ import { Input } from "@/components/ui/input";
 import type { Product } from "@/types";
 import { BarcodeScannerDialog } from "@/components/products/BarcodeScannerDialog";
 import { useState } from "react";
-import { Barcode, ChevronsUpDown } from "lucide-react";
+import { Barcode, ChevronsUpDown, PlusCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { usePOS } from "@/context/POSContext";
+import { CreationDialog } from "./CreationDialog";
 
 
 const formSchema = z.object({
@@ -59,18 +60,19 @@ const ComboboxFormField = ({
     form,
     name,
     label,
-    placeholder,
     options,
-    ...props
 }: {
     form: any,
     name: "category" | "packaging",
     label: string,
-    placeholder: string,
     options: { value: string; label: string }[]
 }) => {
     const [open, setOpen] = useState(false)
-    const [inputValue, setInputValue] = useState(form.getValues(name) || "")
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+    const handleCreate = (newValue: string) => {
+        form.setValue(name, newValue, { shouldValidate: true });
+    };
 
     return (
         <FormField
@@ -102,20 +104,21 @@ const ComboboxFormField = ({
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
                                 <CommandInput 
-                                    placeholder={`Search or create ${label.toLowerCase()}...`}
-                                    value={inputValue}
-                                    onValueChange={setInputValue}
+                                    placeholder={`Search ${label.toLowerCase()}...`}
                                 />
                                 <CommandList>
-                                    <CommandEmpty>
-                                      <Button variant="ghost" className="w-full" onMouseDown={() => {
-                                        form.setValue(name, inputValue);
-                                        setOpen(false);
-                                      }}>
-                                        Create "{inputValue}"
-                                      </Button>
-                                    </CommandEmpty>
+                                    <CommandEmpty>No {label.toLowerCase()} found.</CommandEmpty>
                                     <CommandGroup>
+                                        <CommandItem
+                                          onSelect={() => {
+                                            setOpen(false);
+                                            setIsCreateDialogOpen(true);
+                                          }}
+                                          className="cursor-pointer"
+                                        >
+                                          <PlusCircle className="mr-2 h-4 w-4" />
+                                          Create new {label.toLowerCase()}
+                                        </CommandItem>
                                         {options.map((option) => (
                                             <CommandItem
                                                 value={option.label}
@@ -134,6 +137,13 @@ const ComboboxFormField = ({
                         </PopoverContent>
                     </Popover>
                     <FormMessage />
+                    <CreationDialog
+                        open={isCreateDialogOpen}
+                        onOpenChange={setIsCreateDialogOpen}
+                        title={`Create New ${label}`}
+                        description={`Enter the name for the new ${label.toLowerCase()}.`}
+                        onSave={handleCreate}
+                    />
                 </FormItem>
             )}
         />
@@ -205,14 +215,12 @@ export function ProductForm({ product, onSubmit, onClose }: ProductFormProps) {
                 form={form}
                 name="category"
                 label="Category"
-                placeholder="Select category"
                 options={uniqueCategories}
             />
             <ComboboxFormField
                 form={form}
                 name="packaging"
                 label="Packaging"
-                placeholder="Select packaging"
                 options={uniquePackagings}
             />
         </div>
