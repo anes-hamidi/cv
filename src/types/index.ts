@@ -5,6 +5,14 @@ export interface Product {
   imageUrl?: string;
   stock: number;
   barcode?: string;
+  category?: string;
+  packaging?: string;
+  cost?: number;
+  priceLevels?: {
+    retail: number;
+    semiwholesale: number;
+    wholesale: number;
+  };
 }
 
 export interface CartItem {

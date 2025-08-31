@@ -79,7 +79,7 @@ export function ProductList() {
               <PlusCircle className="mr-2 h-4 w-4" /> Add Product
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="font-headline">
                 {editingProduct ? "Edit Product" : "Add New Product"}
@@ -100,8 +100,8 @@ export function ProductList() {
             <TableRow>
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Barcode</TableHead>
-              <TableHead>Price</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price (Retail)</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -125,8 +125,8 @@ export function ProductList() {
                     />
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{product.barcode || 'N/A'}</TableCell>
-                    <TableCell>{product.price.toFixed(2)} DZ</TableCell>
+                    <TableCell>{product.category || 'N/A'}</TableCell>
+                    <TableCell>{(product.priceLevels?.retail ?? product.price).toFixed(2)} DZ</TableCell>
                     <TableCell>
                       {product.stock > 0 ? (
                         <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>{product.stock} in stock</Badge>
