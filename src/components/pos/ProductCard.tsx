@@ -22,9 +22,9 @@ export function ProductCard({ product }: ProductCardProps) {
       onClick={() => addToCart(product)}
       className="group relative flex cursor-pointer flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
     >
-      <div className="aspect-video relative overflow-hidden">
+      <div className="aspect-[3/4] relative overflow-hidden">
         <Image
-          src={product.imageUrl || 'https://picsum.photos/400/225'}
+          src={product.imageUrl || 'https://picsum.photos/300/400'}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
