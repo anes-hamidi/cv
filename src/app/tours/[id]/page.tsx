@@ -1,4 +1,6 @@
 
+"use client";
+
 import { TourExecutionClient } from "@/components/tours/TourExecutionClient";
 
 export default function TourExecutionPage({ params }: { params: { id: string } }) {
