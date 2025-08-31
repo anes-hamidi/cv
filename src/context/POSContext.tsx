@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction, useCallback } from "react";
 import type { Product, CartItem, Sale, Customer, Circuit, Tour } from "@/types";
 import { INITIAL_PRODUCTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -88,7 +88,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   }, [products, sales, customers, circuits, tours, isMounted]);
 
   // Products
-  const addOrUpdateProduct = (product: Product) => {
+  const addOrUpdateProduct = useCallback((product: Product) => {
     setProducts((prev) => {
       const existing = prev.find((p) => p.id === product.id);
       if (existing) {
@@ -96,13 +96,13 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       }
       return [...prev, product];
     });
-  };
-  const deleteProduct = (productId: string) => {
+  }, []);
+  const deleteProduct = useCallback((productId: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
+  }, []);
 
   // Cart
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     if (product.stock <= 0) {
       toast({ title: "Out of Stock", description: `${product.name} is currently unavailable.`, variant: "destructive" });
       return;
@@ -119,11 +119,13 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       return [...prev, { productId: product.id, name: product.name, price: product.price, quantity: 1 }];
     });
     toast({ title: "Item Added", description: `${product.name} was added to your cart.` });
-  };
-  const removeFromCart = (productId: string) => {
+  }, [products, toast]);
+
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((item) => item.productId !== productId));
-  };
-  const updateCartItemQuantity = (productId: string, quantity: number) => {
+  }, []);
+
+  const updateCartItemQuantity = useCallback((productId: string, quantity: number) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
     if (quantity > product.stock) {
@@ -135,11 +137,12 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     setCart((prev) => prev.map((item) => (item.productId === productId ? { ...item, quantity } : item)));
-  };
-  const clearCart = () => setCart([]);
+  }, [products, toast, removeFromCart]);
+
+  const clearCart = useCallback(() => setCart([]), []);
 
   // Sales
-  const completeSale = (customerId?: string): Sale => {
+  const completeSale = useCallback((customerId?: string): Sale => {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const saleCustomerId = customerId || selectedCustomer?.id;
     const newSale: Sale = {
@@ -160,43 +163,46 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     setSales((prev) => [newSale, ...prev]);
     clearCart();
     return newSale;
-  };
+  }, [cart, selectedCustomer, clearCart]);
 
   // Customers
-  const addOrUpdateCustomer = (customer: Customer) => {
+  const addOrUpdateCustomer = useCallback((customer: Customer) => {
     setCustomers(prev => {
         const existing = prev.find(c => c.id === customer.id);
         if(existing) return prev.map(c => c.id === customer.id ? customer : c);
         return [...prev, customer];
     });
-  }
-  const deleteCustomer = (customerId: string) => {
+  }, []);
+
+  const deleteCustomer = useCallback((customerId: string) => {
     setCustomers(prev => prev.filter(c => c.id !== customerId));
-  }
+  }, []);
 
   // Circuits
-  const addOrUpdateCircuit = (circuit: Circuit) => {
+  const addOrUpdateCircuit = useCallback((circuit: Circuit) => {
     setCircuits(prev => {
         const existing = prev.find(c => c.id === circuit.id);
         if(existing) return prev.map(c => c.id === circuit.id ? circuit : c);
         return [...prev, circuit];
     });
-  }
-  const deleteCircuit = (circuitId: string) => {
+  }, []);
+
+  const deleteCircuit = useCallback((circuitId: string) => {
     setCircuits(prev => prev.filter(c => c.id !== circuitId));
-  }
+  }, []);
 
   // Tours
-  const addOrUpdateTour = (tour: Tour) => {
+  const addOrUpdateTour = useCallback((tour: Tour) => {
     setTours(prev => {
       const existing = prev.find(t => t.id === tour.id);
       if(existing) return prev.map(t => t.id === tour.id ? tour : t);
       return [tour, ...prev].sort((a,b) => b.date.localeCompare(a.date));
     });
-  }
-  const deleteTour = (tourId: string) => {
+  }, []);
+
+  const deleteTour = useCallback((tourId: string) => {
     setTours(prev => prev.filter(t => t.id !== tourId));
-  }
+  }, []);
 
 
   const value = {
