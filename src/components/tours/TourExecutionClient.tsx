@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { usePOS } from "@/context/POSContext";
 import { Cart } from "@/components/pos/Cart";
 import { ProductGrid } from "@/components/pos/ProductGrid";
@@ -39,12 +39,10 @@ import {
   } from "@/components/ui/alert-dialog";
 import { Separator } from "../ui/separator";
 
-interface TourExecutionClientProps {
-  tourId: string;
-}
-
-export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
+export function TourExecutionClient() {
   const router = useRouter();
+  const params = useParams();
+  const tourId = params.id as string;
   const { toast } = useToast();
   const { 
     isDataReady,
@@ -68,14 +66,6 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
     return circuits.find(c => c.id === tour.circuitId);
   }, [circuits, tour]);
 
-  useEffect(() => {
-    // Clear selected customer when component unmounts or tour changes
-    return () => {
-      setSelectedCustomer(null);
-      clearCart();
-    }
-  }, [tourId, setSelectedCustomer, clearCart]);
-  
   const startTour = useCallback(() => {
     if (tour && tour.status === 'planned' && circuit) {
       addOrUpdateTour({ ...tour, status: 'in-progress' });
@@ -89,6 +79,13 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
     }
   }, [isDataReady, startTour]);
 
+  useEffect(() => {
+    // Clear selected customer when component unmounts or tour changes
+    return () => {
+      setSelectedCustomer(null);
+      clearCart();
+    }
+  }, [tourId, setSelectedCustomer, clearCart]);
 
   const tourCustomers = useMemo(() => {
     if (!circuit) return [];

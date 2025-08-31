@@ -3,10 +3,10 @@
 
 import { TourExecutionClient } from "@/components/tours/TourExecutionClient";
 
-export default function TourExecutionPage({ params }: { params: { id: string } }) {
+export default function TourExecutionPage() {
   return (
     <div className="h-[calc(100vh-3.5rem)]">
-      <TourExecutionClient tourId={params.id} />
+      <TourExecutionClient />
     </div>
   );
 }
