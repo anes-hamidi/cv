@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePOS } from "@/context/POSContext";
@@ -16,9 +17,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 
 export function SalesHistory() {
-  const { sales } = usePOS();
+  const { sales, customers } = usePOS();
+
+  const customerMap = useMemo(() => {
+    return new Map(customers.map(c => [c.id, c.name]));
+  }, [customers]);
 
   return (
     <div>
@@ -45,6 +51,11 @@ export function SalesHistory() {
                         <div className="text-sm text-muted-foreground">
                             {new Date(sale.date).toLocaleString()}
                         </div>
+                        {sale.customerId && customerMap.has(sale.customerId) && (
+                          <Badge variant="outline" className="mt-1">
+                            {customerMap.get(sale.customerId)}
+                          </Badge>
+                        )}
                     </TableCell>
                     <TableCell>
                         <Accordion type="single" collapsible className="w-full">
