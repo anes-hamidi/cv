@@ -3,40 +3,76 @@
 
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays, parseISO, eachDayOfInterval, startOfWeek, startOfMonth, startOfYear, eachWeekOfInterval, eachMonthOfInterval, formatISO, getYear } from "date-fns";
 import type { Sale } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SalesChartProps {
   sales: Sale[];
+  timeRange: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
-export function SalesChart({ sales }: SalesChartProps) {
+export function SalesChart({ sales, timeRange }: SalesChartProps) {
   const chartData = useMemo(() => {
-    const data: { [key: string]: number } = {};
-    const today = new Date();
+    const now = new Date();
+    let data: { name: string; total: number }[] = [];
 
-    // Initialize the last 30 days with 0 revenue
-    for (let i = 29; i >= 0; i--) {
-      const date = format(subDays(today, i), "MMM d");
-      data[date] = 0;
+    switch(timeRange) {
+      case 'daily': {
+        const last30Days = eachDayOfInterval({ start: subDays(now, 29), end: now });
+        data = last30Days.map(day => ({ name: format(day, "MMM d"), total: 0 }));
+
+        sales.forEach(sale => {
+          const saleDateStr = format(parseISO(sale.date), "MMM d");
+          const dayData = data.find(d => d.name === saleDateStr);
+          if (dayData) {
+            dayData.total += sale.total;
+          }
+        });
+        break;
+      }
+      case 'weekly': {
+        const start = startOfWeek(subDays(now, 365)); // a year of weeks
+        const weeks = eachWeekOfInterval({ start, end: now });
+        data = weeks.map(week => ({ name: format(week, "MMM d"), total: 0 }));
+
+        sales.forEach(sale => {
+            const saleWeekStartStr = format(startOfWeek(parseISO(sale.date)), "MMM d");
+            const weekData = data.find(d => d.name === saleWeekStartStr);
+            if (weekData) {
+                weekData.total += sale.total;
+            }
+        });
+        break;
+      }
+      case 'monthly': {
+        const start = startOfYear(now);
+        const months = eachMonthOfInterval({ start, end: now });
+        data = months.map(month => ({ name: format(month, "MMM"), total: 0 }));
+        
+        sales.forEach(sale => {
+            const saleMonthStr = format(parseISO(sale.date), "MMM");
+            const monthData = data.find(d => d.name === saleMonthStr);
+            if(monthData) {
+                monthData.total += sale.total;
+            }
+        });
+        break;
+      }
+      case 'yearly': {
+          const yearData: { [year: string]: number } = {};
+          sales.forEach(sale => {
+              const year = getYear(parseISO(sale.date)).toString();
+              if(!yearData[year]) yearData[year] = 0;
+              yearData[year] += sale.total;
+          });
+          data = Object.entries(yearData).map(([name, total]) => ({ name, total })).sort((a,b) => parseInt(a.name) - parseInt(b.name));
+          break;
+      }
     }
 
-    // Populate with actual sales data
-    sales.forEach(sale => {
-        const saleDate = parseISO(sale.date);
-        const diffDays = (today.getTime() - saleDate.getTime()) / (1000 * 3600 * 24);
-
-        if (diffDays < 30) {
-            const formattedDate = format(saleDate, "MMM d");
-            if (data[formattedDate] !== undefined) {
-                data[formattedDate] += sale.total;
-            }
-        }
-    });
-
-    return Object.entries(data).map(([name, total]) => ({ name, total }));
-  }, [sales]);
+    return data;
+  }, [sales, timeRange]);
 
   return (
     <Card>

@@ -2,21 +2,56 @@
 "use client";
 
 import { usePOS } from "@/context/POSContext";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StatCard } from "./StatCard";
 import { DollarSign, ShoppingCart, Percent, Package } from "lucide-react";
 import { SalesChart } from "./SalesChart";
 import { ProductInsights } from "./ProductInsights";
 import { StockOverview } from "./StockOverview";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { subDays, startOfWeek, startOfMonth, startOfYear, isWithinInterval } from "date-fns";
+import type { Sale } from "@/types";
+
+type TimeRange = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export function AnalysisDashboard() {
   const { sales, products } = usePOS();
+  const [timeRange, setTimeRange] = useState<TimeRange>('daily');
+
+  const filteredSales = useMemo(() => {
+    const now = new Date();
+    let interval: Interval;
+
+    switch (timeRange) {
+      case 'daily':
+        interval = { start: subDays(now, 1), end: now };
+        break;
+      case 'weekly':
+        interval = { start: startOfWeek(now), end: now };
+        break;
+      case 'monthly':
+        interval = { start: startOfMonth(now), end: now };
+        break;
+      case 'yearly':
+        interval = { start: startOfYear(now), end: now };
+        break;
+      default:
+        interval = { start: subDays(now, 1), end: now };
+    }
+    
+    // An additional filter to handle all sales if there is no date range selected
+    if (timeRange === 'daily' && sales.every(sale => !isWithinInterval(new Date(sale.date), interval))) {
+        return sales.filter(sale => isWithinInterval(new Date(sale.date), {start: subDays(now, 1), end: now}));
+    }
+
+    return sales.filter(sale => isWithinInterval(new Date(sale.date), interval));
+  }, [sales, timeRange]);
 
   const analysisData = useMemo(() => {
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+    const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
     
     let totalCost = 0;
-    sales.forEach(sale => {
+    filteredSales.forEach(sale => {
       sale.items.forEach(item => {
         const product = products.find(p => p.id === item.productId);
         if (product && product.cost) {
@@ -27,16 +62,16 @@ export function AnalysisDashboard() {
 
     const totalProfit = totalRevenue - totalCost;
     const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-    const averageSale = sales.length > 0 ? totalRevenue / sales.length : 0;
+    const averageSale = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
 
     return {
       totalRevenue,
       totalProfit,
       profitMargin,
       averageSale,
-      totalSales: sales.length,
+      totalSales: filteredSales.length,
     };
-  }, [sales, products]);
+  }, [filteredSales, products]);
 
   if (sales.length === 0) {
     return (
@@ -54,6 +89,15 @@ export function AnalysisDashboard() {
 
   return (
     <div className="space-y-6">
+      <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
+        <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="daily">Today</TabsTrigger>
+            <TabsTrigger value="weekly">This Week</TabsTrigger>
+            <TabsTrigger value="monthly">This Month</TabsTrigger>
+            <TabsTrigger value="yearly">This Year</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
           title="Total Revenue" 
@@ -84,7 +128,7 @@ export function AnalysisDashboard() {
       
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-            <SalesChart sales={sales} />
+            <SalesChart sales={filteredSales} timeRange={timeRange} />
         </div>
         <div className="lg:col-span-1">
             <StockOverview products={products} />
@@ -92,7 +136,7 @@ export function AnalysisDashboard() {
       </div>
       
       <div>
-        <ProductInsights sales={sales} products={products} />
+        <ProductInsights sales={filteredSales} products={products} />
       </div>
 
     </div>
