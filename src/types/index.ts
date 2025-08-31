@@ -1,8 +1,11 @@
 
+
+export type PriceLevel = 'retail' | 'semiwholesale' | 'wholesale';
+
 export interface Product {
   id: string;
   name: string;
-  price: number;
+  price: number; // This will now represent the retail price
   imageUrl?: string;
   stock: number;
   barcode?: string;
@@ -19,7 +22,7 @@ export interface Product {
 export interface CartItem {
   productId: string;
   name: string;
-  price: number;
+  price: number; // The price at which it was added to the cart
   quantity: number;
 }
 
@@ -37,4 +40,5 @@ export interface Customer {
   address: string;
   municipality: string;
   phone?: string;
+  priceLevel: PriceLevel;
 }

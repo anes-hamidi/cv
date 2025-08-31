@@ -32,9 +32,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { CustomerForm } from "./CustomerForm";
-import type { Customer } from "@/types";
+import type { Customer, PriceLevel } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+const priceLevelLabels: Record<PriceLevel, string> = {
+  retail: "Retail",
+  semiwholesale: "Semi-Wholesale",
+  wholesale: "Wholesale",
+};
 
 export function CustomerList() {
   const { customers, addOrUpdateCustomer, deleteCustomer } = usePOS();
@@ -47,7 +54,7 @@ export function CustomerList() {
     const customerData = {
       ...data,
       id: editingCustomer?.id || new Date().toISOString(),
-    }
+    } as Customer;
     addOrUpdateCustomer(customerData);
     toast({
       title: `Customer ${editingCustomer ? 'updated' : 'created'}`,
@@ -113,7 +120,7 @@ export function CustomerList() {
               <TableHead>Name</TableHead>
               <TableHead>Address</TableHead>
               <TableHead>Municipality</TableHead>
-              <TableHead>Phone</TableHead>
+              <TableHead>Price Level</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -128,7 +135,9 @@ export function CustomerList() {
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.address}</TableCell>
                     <TableCell>{customer.municipality}</TableCell>
-                    <TableCell>{customer.phone || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{priceLevelLabels[customer.priceLevel]}</Badge>
+                    </TableCell>
                     <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(customer)}>
                         <Edit className="h-4 w-4" />

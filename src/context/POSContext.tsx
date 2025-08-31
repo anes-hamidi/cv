@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction, useCallback } from "react";
-import type { Product, CartItem, Sale, Customer } from "@/types";
+import type { Product, CartItem, Sale, Customer, PriceLevel } from "@/types";
 import { INITIAL_PRODUCTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,6 +73,13 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [products, sales, customers, isMounted]);
 
+  const getPriceForCustomer = useCallback((product: Product, priceLevel: PriceLevel): number => {
+    if (product.priceLevels) {
+      return product.priceLevels[priceLevel] ?? product.price;
+    }
+    return product.price;
+  }, []);
+
   // Products
   const addOrUpdateProduct = useCallback((product: Product) => {
     setProducts((prev) => {
@@ -94,6 +101,10 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Out of Stock", description: `${product.name} is currently unavailable.`, variant: "destructive" });
       return;
     }
+
+    const priceLevel = selectedCustomer?.priceLevel || 'retail';
+    const price = getPriceForCustomer(p, priceLevel);
+
     setCart((prev) => {
       const existingItem = prev.find((item) => item.productId === product.id);
       if (existingItem) {
@@ -103,10 +114,10 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
         }
         return prev.map((item) => item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...prev, { productId: product.id, name: product.name, price: product.price, quantity: 1 }];
+      return [...prev, { productId: product.id, name: product.name, price: price, quantity: 1 }];
     });
     toast({ title: "Item Added", description: `${product.name} was added to your cart.` });
-  }, [products, toast]);
+  }, [products, toast, selectedCustomer, getPriceForCustomer]);
 
   const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((item) => item.productId !== productId));

@@ -14,13 +14,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Customer } from "@/types";
+import type { Customer, PriceLevel } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   address: z.string().min(5, "Address must be at least 5 characters."),
   municipality: z.string().min(2, "Municipality is required."),
   phone: z.string().optional(),
+  priceLevel: z.enum(['retail', 'semiwholesale', 'wholesale'], {
+    required_error: "Price level is required."
+  }),
 });
 
 type CustomerFormData = z.infer<typeof formSchema>;
@@ -39,6 +49,7 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
       address: customer?.address || "",
       municipality: customer?.municipality || "",
       phone: customer?.phone || "",
+      priceLevel: customer?.priceLevel || "retail",
     },
   });
 
@@ -99,6 +110,28 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
                 )}
              />
         </div>
+        <FormField
+          control={form.control}
+          name="priceLevel"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Price Level</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a price level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="retail">Retail</SelectItem>
+                  <SelectItem value="semiwholesale">Semi-Wholesale</SelectItem>
+                  <SelectItem value="wholesale">Wholesale</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
             <Button type="submit">{customer ? "Save Changes" : "Create Customer"}</Button>
