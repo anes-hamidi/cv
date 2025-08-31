@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export function Cart() {
-  const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale, products } = usePOS();
+  const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale, products, selectedCustomer } = usePOS();
   const { toast } = useToast();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -27,10 +27,10 @@ export function Cart() {
       });
       return;
     }
-    const newSale = completeSale();
+    const newSale = completeSale(selectedCustomer?.id);
     toast({
       title: "Sale Completed!",
-      description: `Total: ${newSale.total.toFixed(2)} DZ.`,
+      description: `Total: ${newSale.total.toFixed(2)} DZ for ${selectedCustomer?.name || 'customer'}.`,
       action: (
         <Button variant="outline" size="sm" onClick={() => handlePrintReceipt(newSale)}>
           <Printer className="mr-2 h-4 w-4" />

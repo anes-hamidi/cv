@@ -19,6 +19,8 @@ interface POSContextType {
   sales: Sale[];
   setSales: Dispatch<SetStateAction<Sale[]>>;
   completeSale: (customerId?: string) => Sale;
+  selectedCustomer: Customer | null;
+  setSelectedCustomer: Dispatch<SetStateAction<Customer | null>>;
 
   customers: Customer[];
   addOrUpdateCustomer: (customer: Customer) => void;
@@ -40,6 +42,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [circuits, setCircuits] = useState<Circuit[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
@@ -138,12 +141,13 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   // Sales
   const completeSale = (customerId?: string): Sale => {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const saleCustomerId = customerId || selectedCustomer?.id;
     const newSale: Sale = {
       id: new Date().toISOString(),
       items: cart,
       total,
       date: new Date().toISOString(),
-      customerId,
+      customerId: saleCustomerId,
     };
     setProducts(prevProducts => {
         const updatedProducts = [...prevProducts];
@@ -201,7 +205,8 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     sales, setSales, completeSale,
     customers, addOrUpdateCustomer, deleteCustomer,
     circuits, addOrUpdateCircuit, deleteCircuit,
-    tours, addOrUpdateTour, deleteTour
+    tours, addOrUpdateTour, deleteTour,
+    selectedCustomer, setSelectedCustomer,
   };
 
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;
