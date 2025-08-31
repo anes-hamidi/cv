@@ -30,7 +30,7 @@ export function Cart() {
     const newSale = completeSale();
     toast({
       title: "Sale Completed!",
-      description: `Total: $${newSale.total.toFixed(2)}.`,
+      description: `Total: ${newSale.total.toFixed(2)} DZ.`,
       action: (
         <Button variant="outline" size="sm" onClick={() => handlePrintReceipt(newSale)}>
           <Printer className="mr-2 h-4 w-4" />
@@ -64,10 +64,10 @@ export function Cart() {
     receiptText += "Items:\n";
     sale.items.forEach(item => {
       const itemTotal = (item.price * item.quantity).toFixed(2);
-      receiptText += `${item.name} (x${item.quantity}) - $${itemTotal}\n`;
+      receiptText += `${item.name} (x${item.quantity}) - ${itemTotal} DZ\n`;
     });
     receiptText += "----------------------\n";
-    receiptText += `Total: $${sale.total.toFixed(2)}\n\n`;
+    receiptText += `Total: ${sale.total.toFixed(2)} DZ\n\n`;
     receiptText += "Thank you!\n\n\n";
 
     try {
@@ -167,7 +167,7 @@ export function Cart() {
                 <div key={item.productId} className="flex items-center justify-between gap-2">
                   <div className="flex-grow overflow-hidden">
                     <p className="font-medium truncate">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">{item.price.toFixed(2)} DZ</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <Input
@@ -193,17 +193,17 @@ export function Cart() {
            <div className="w-full py-4 space-y-2 text-sm">
              <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{total.toFixed(2)} DZ</span>
              </div>
              <div className="flex justify-between">
                 <span className="text-muted-foreground">Taxes</span>
-                <span>$0.00</span>
+                <span>0.00 DZ</span>
              </div>
            </div>
           <Separator />
           <div className="w-full flex justify-between items-center text-lg font-bold py-4">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{total.toFixed(2)} DZ</span>
           </div>
           <Button className="w-full text-lg h-12 bg-primary hover:bg-primary/90" onClick={handleCheckout}>
             Checkout

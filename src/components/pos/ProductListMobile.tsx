@@ -67,7 +67,7 @@ export function ProductListMobile({ onScanClick }: ProductListMobileProps) {
               />
               <div className="flex-grow">
                 <p className="font-semibold">{product.name}</p>
-                <p className="text-sm text-primary">${product.price.toFixed(2)}</p>
+                <p className="text-sm text-primary">{product.price.toFixed(2)} DZ</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button 

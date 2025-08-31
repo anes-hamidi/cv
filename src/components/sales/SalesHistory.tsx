@@ -63,7 +63,7 @@ export function SalesHistory() {
                         </Accordion>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-primary">
-                        ${sale.total.toFixed(2)}
+                        {sale.total.toFixed(2)} DZ
                     </TableCell>
                 </TableRow>
                 ))

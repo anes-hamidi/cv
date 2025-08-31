@@ -41,7 +41,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="text-base font-semibold font-headline truncate">{product.name}</h3>
       </CardContent>
       <CardFooter className="p-3 pt-0 flex justify-end">
-        <p className="text-lg font-bold text-primary">${product.price.toFixed(2)}</p>
+        <p className="text-lg font-bold text-primary">{product.price.toFixed(2)} DZ</p>
       </CardFooter>
     </Card>
   );
