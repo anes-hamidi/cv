@@ -78,6 +78,14 @@ export function TourList() {
     setEditingTour(undefined);
     setIsFormOpen(true);
   }
+  
+  const getButtonText = (status: Tour['status']) => {
+    switch (status) {
+        case 'planned': return 'Start Tour';
+        case 'in-progress': return 'Continue Tour';
+        case 'completed': return 'View Completed';
+    }
+  }
 
   return (
     <div>
@@ -140,7 +148,7 @@ export function TourList() {
                         <TableCell className="text-right space-x-2">
                           <Button asChild variant="outline" size="sm">
                             <Link href={`/tours/${tour.id}`}>
-                              {tour.status === 'in-progress' ? 'Continue Tour' : 'View Tour'}
+                              {getButtonText(tour.status)}
                             </Link>
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(tour)} disabled={tour.status !== 'planned'}>

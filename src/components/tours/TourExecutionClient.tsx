@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePOS } from "@/context/POSContext";
 import { Cart } from "@/components/pos/Cart";
@@ -52,6 +52,13 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
 
   const tour = useMemo(() => tours.find(t => t.id === tourId), [tours, tourId]);
   
+  useEffect(() => {
+    if (tour && tour.status === 'planned') {
+      addOrUpdateTour({ ...tour, status: 'in-progress' });
+      toast({ title: "Tour Started!", description: `You are now on the ${circuit?.name} tour.` });
+    }
+  }, [tour]);
+
   const circuit = useMemo(() => {
     if (!tour) return null;
     return circuits.find(c => c.id === tour.circuitId);
@@ -96,11 +103,6 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
     setSelectedCustomer(customer);
   }
 
-  const startTour = () => {
-    addOrUpdateTour({ ...tour, status: 'in-progress' });
-    toast({ title: "Tour Started!", description: `You are now on the ${circuit.name} tour.` });
-  };
-
   const completeTour = () => {
     addOrUpdateTour({ ...tour, status: 'completed' });
     toast({ title: "Tour Completed!", description: `Congratulations on finishing the ${circuit.name} tour.` });
@@ -135,15 +137,10 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
             </div>
         </ScrollArea>
         <div className="p-4 border-t">
-          {tour.status === 'planned' && (
-            <Button className="w-full" onClick={startTour}>
-              <Play className="mr-2 h-4 w-4" /> Start Tour
-            </Button>
-          )}
-           {tour.status === 'in-progress' && (
+          {tour.status === 'in-progress' && (
              <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button className="w-full" variant="secondary">
+                    <Button className="w-full" variant="destructive">
                         <Flag className="mr-2 h-4 w-4" /> Complete Tour
                     </Button>
                 </AlertDialogTrigger>
