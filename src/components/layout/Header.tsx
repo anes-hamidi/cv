@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Package2, Home, List, BarChart, Menu, Settings, Users, Milestone, Route } from "lucide-react";
+import { Package2, Home, List, BarChart, Menu, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -21,15 +21,9 @@ const mainLinks = [
   { href: "/sales", label: "Sales", icon: BarChart },
 ];
 
-const tourLinks = [
-  { href: "/tours", label: "Tours", icon: Route },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/circuits", label: "Circuits", icon: Milestone },
-]
-
 const settingsLink = { href: "/settings", label: "Settings", icon: Settings };
 
-const allLinks = [...mainLinks, ...tourLinks];
+const allLinks = [...mainLinks];
 
 const NavLink = ({ link, pathname }: { link: {href: string, label: string, icon: any}, pathname: string}) => (
   <Link
@@ -67,8 +61,6 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden items-center space-x-1 text-sm font-medium md:flex flex-1">
           {mainLinks.map((link) => <NavLink key={link.href} link={link} pathname={pathname} />)}
-          <div className="mx-2 h-6 w-px bg-border" />
-          {tourLinks.map((link) => <NavLink key={link.href} link={link} pathname={pathname} />)}
           
           <div className="flex-grow" />
           <NavLink link={settingsLink} pathname={pathname} />

@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction, useCallback } from "react";
-import type { Product, CartItem, Sale, Customer, Circuit, Tour } from "@/types";
+import type { Product, CartItem, Sale, Customer } from "@/types";
 import { INITIAL_PRODUCTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,12 +26,6 @@ interface POSContextType {
   customers: Customer[];
   addOrUpdateCustomer: (customer: Customer) => void;
   deleteCustomer: (customerId: string) => void;
-  circuits: Circuit[];
-  addOrUpdateCircuit: (circuit: Circuit) => void;
-  deleteCircuit: (circuitId: string) => void;
-  tours: Tour[];
-  addOrUpdateTour: (tour: Tour) => void;
-  deleteTour: (tourId: string) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -41,8 +35,6 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [circuits, setCircuits] = useState<Circuit[]>([]);
-  const [tours, setTours] = useState<Tour[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   
   const [isDataReady, setIsDataReady] = useState(false);
@@ -61,19 +53,11 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       const storedCustomers = localStorage.getItem("pos-customers");
       setCustomers(storedCustomers ? JSON.parse(storedCustomers) : []);
       
-      const storedCircuits = localStorage.getItem("pos-circuits");
-      setCircuits(storedCircuits ? JSON.parse(storedCircuits) : []);
-
-      const storedTours = localStorage.getItem("pos-tours");
-      setTours(storedTours ? JSON.parse(storedTours) : []);
-
     } catch (error) {
         console.error("Failed to load data from localStorage", error);
         setProducts(INITIAL_PRODUCTS);
         setSales([]);
         setCustomers([]);
-        setCircuits([]);
-        setTours([]);
     } finally {
       setIsDataReady(true);
     }
@@ -86,10 +70,8 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("pos-products", JSON.stringify(products));
       localStorage.setItem("pos-sales", JSON.stringify(sales));
       localStorage.setItem("pos-customers", JSON.stringify(customers));
-      localStorage.setItem("pos-circuits", JSON.stringify(circuits));
-      localStorage.setItem("pos-tours", JSON.stringify(tours));
     }
-  }, [products, sales, customers, circuits, tours, isMounted]);
+  }, [products, sales, customers, isMounted]);
 
   // Products
   const addOrUpdateProduct = useCallback((product: Product) => {
@@ -183,41 +165,12 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     setCustomers(prev => prev.filter(c => c.id !== customerId));
   }, []);
 
-  // Circuits
-  const addOrUpdateCircuit = useCallback((circuit: Circuit) => {
-    setCircuits(prev => {
-        const existing = prev.find(c => c.id === circuit.id);
-        if(existing) return prev.map(c => c.id === circuit.id ? circuit : c);
-        return [...prev, circuit];
-    });
-  }, []);
-
-  const deleteCircuit = useCallback((circuitId: string) => {
-    setCircuits(prev => prev.filter(c => c.id !== circuitId));
-  }, []);
-
-  // Tours
-  const addOrUpdateTour = useCallback((tour: Tour) => {
-    setTours(prev => {
-      const existing = prev.find(t => t.id === tour.id);
-      if(existing) return prev.map(t => t.id === tour.id ? tour : t);
-      return [tour, ...prev].sort((a,b) => b.date.localeCompare(a.date));
-    });
-  }, []);
-
-  const deleteTour = useCallback((tourId: string) => {
-    setTours(prev => prev.filter(t => t.id !== tourId));
-  }, []);
-
-
   const value = {
     isDataReady,
     products, setProducts, addOrUpdateProduct, deleteProduct,
     cart, addToCart, removeFromCart, updateCartItemQuantity, clearCart,
     sales, setSales, completeSale,
     customers, addOrUpdateCustomer, deleteCustomer,
-    circuits, addOrUpdateCircuit, deleteCircuit,
-    tours, addOrUpdateTour, deleteTour,
     selectedCustomer, setSelectedCustomer,
   };
 

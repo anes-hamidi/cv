@@ -37,18 +37,4 @@ export interface Customer {
   address: string;
   municipality: string;
   phone?: string;
-  circuitId?: string;
-}
-
-export interface Circuit {
-  id: string;
-  name: string;
-  municipalities: string[];
-}
-
-export interface Tour {
-  id: string;
-  date: string; // YYYY-MM-DD
-  circuitId: string;
-  status: 'planned' | 'in-progress' | 'completed';
 }

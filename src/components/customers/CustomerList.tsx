@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { usePOS } from "@/context/POSContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,17 +35,13 @@ import { CustomerForm } from "./CustomerForm";
 import type { Customer } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export function CustomerList() {
-  const { customers, circuits, addOrUpdateCustomer, deleteCustomer } = usePOS();
+  const { customers, addOrUpdateCustomer, deleteCustomer } = usePOS();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
   const { toast } = useToast();
 
-  const circuitMap = useMemo(() => {
-    return new Map(circuits.map(c => [c.id, c.name]));
-  }, [circuits]);
 
   const handleFormSubmit = (data: Omit<Customer, 'id'>) => {
     const customerData = {
@@ -108,7 +104,7 @@ export function CustomerList() {
               <TableHead>Name</TableHead>
               <TableHead>Address</TableHead>
               <TableHead>Municipality</TableHead>
-              <TableHead>Circuit</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -123,13 +119,7 @@ export function CustomerList() {
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.address}</TableCell>
                     <TableCell>{customer.municipality}</TableCell>
-                    <TableCell>
-                      {customer.circuitId && circuitMap.has(customer.circuitId) ? (
-                        <Badge variant="secondary">{circuitMap.get(customer.circuitId)}</Badge>
-                      ) : (
-                        'N/A'
-                      )}
-                    </TableCell>
+                    <TableCell>{customer.phone || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(customer)}>
                         <Edit className="h-4 w-4" />

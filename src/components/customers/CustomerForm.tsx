@@ -15,16 +15,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Customer } from "@/types";
-import { usePOS } from "@/context/POSContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   address: z.string().min(5, "Address must be at least 5 characters."),
   municipality: z.string().min(2, "Municipality is required."),
   phone: z.string().optional(),
-  circuitId: z.string().optional(),
 });
 
 type CustomerFormData = z.infer<typeof formSchema>;
@@ -36,8 +32,6 @@ interface CustomerFormProps {
 }
 
 export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps) {
-  const { circuits } = usePOS();
-
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,7 +39,6 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
       address: customer?.address || "",
       municipality: customer?.municipality || "",
       phone: customer?.phone || "",
-      circuitId: customer?.circuitId || "",
     },
   });
 
@@ -106,28 +99,6 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
                 )}
              />
         </div>
-        <FormField
-          control={form.control}
-          name="circuitId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Circuit (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Assign to a circuit" />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {circuits.map(circuit => (
-                            <SelectItem key={circuit.id} value={circuit.id}>{circuit.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
             <Button type="submit">{customer ? "Save Changes" : "Create Customer"}</Button>
