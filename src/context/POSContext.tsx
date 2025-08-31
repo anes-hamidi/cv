@@ -168,19 +168,15 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       customerId: selectedCustomer?.id,
     };
 
-    setProducts(prevProducts => {
-      const productsToUpdate = [...prevProducts];
-      
-      cart.forEach(cartItem => {
-        const productIndex = productsToUpdate.findIndex(p => p.id === cartItem.productId);
-        if (productIndex !== -1) {
-          const currentStock = productsToUpdate[productIndex].stock;
-          productsToUpdate[productIndex].stock = currentStock - cartItem.quantity;
-        }
-      });
-      
-      return productsToUpdate;
-    });
+    setProducts(currentProducts => 
+        currentProducts.map(p => {
+            const itemInCart = cart.find(item => item.productId === p.id);
+            if (itemInCart) {
+                return { ...p, stock: p.stock - itemInCart.quantity };
+            }
+            return p;
+        })
+    );
 
     setSales((prev) => [newSale, ...prev]);
     clearCart();
