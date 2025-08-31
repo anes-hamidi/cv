@@ -17,23 +17,55 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Search, Calendar as CalendarIcon } from "lucide-react";
 import type { Sale } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export function SalesHistory() {
-  const { sales, customers, products } = usePOS();
+  const { sales, customers } = usePOS();
   const { toast } = useToast();
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const customerMap = useMemo(() => {
     return new Map(customers.map(c => [c.id, c.name]));
   }, [customers]);
 
-  const totalSalesCount = sales.length;
-  const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+  const filteredSales = useMemo(() => {
+    let salesToFilter = sales;
+
+    if (date) {
+      salesToFilter = salesToFilter.filter(sale => 
+        format(new Date(sale.date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+      );
+    }
+
+    if (searchQuery) {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        salesToFilter = salesToFilter.filter(sale => {
+            const customerName = sale.customerId ? customerMap.get(sale.customerId)?.toLowerCase() : '';
+            const hasMatchingProduct = sale.items.some(item => item.name.toLowerCase().includes(lowerCaseQuery));
+            
+            return sale.id.toLowerCase().includes(lowerCaseQuery) ||
+                   customerName?.includes(lowerCaseQuery) ||
+                   hasMatchingProduct;
+        });
+    }
+
+    return salesToFilter;
+  }, [sales, date, searchQuery, customerMap]);
+
+
+  const totalSalesCount = filteredSales.length;
+  const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
 
   const handlePrintReceipt = async (sale: Sale) => {
     
@@ -73,10 +105,9 @@ export function SalesHistory() {
     receiptText += "Thank you!\n\n\n";
 
     try {
-      // Request a Bluetooth device. This will trigger a permission prompt in the browser.
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true, // For demo purposes, you should filter this in production by service UUIDs.
-        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Example service UUID for a thermal printer
+        acceptAllDevices: true, 
+        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] 
       });
       
       if(!device.gatt) {
@@ -94,8 +125,6 @@ export function SalesHistory() {
       
       toast({ title: `Connected to ${device.name}. Getting service...` });
       
-      // IMPORTANT: Replace with the actual service and characteristic UUIDs
-      // for your Bluetooth printer.
       const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
       const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
 
@@ -104,8 +133,7 @@ export function SalesHistory() {
       const encoder = new TextEncoder();
       const data = encoder.encode(receiptText);
       
-      // Write data in chunks if it's too large for a single write
-      const chunkSize = 100; // Adjust chunk size based on your printer's capability
+      const chunkSize = 100;
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
         await characteristic.writeValue(chunk);
@@ -172,6 +200,40 @@ export function SalesHistory() {
         </Card>
       </div>
 
+      <div className="flex justify-between items-center mb-4 gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by ID, customer, or product..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[280px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+      </div>
+
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
@@ -183,12 +245,12 @@ export function SalesHistory() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sales.length === 0 ? (
+            {filteredSales.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">No sales recorded yet.</TableCell>
+                    <TableCell colSpan={4} className="h-24 text-center">No sales found for the selected criteria.</TableCell>
                 </TableRow>
             ) : (
-                sales.map((sale) => (
+                filteredSales.map((sale) => (
                 <TableRow key={sale.id}>
                     <TableCell>
                         <div className="font-medium">Sale ID: {sale.id.substring(0, 8)}...</div>
