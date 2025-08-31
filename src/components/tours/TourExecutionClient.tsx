@@ -61,6 +61,11 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
 
   const tour = useMemo(() => tours.find(t => t.id === tourId), [tours, tourId]);
   
+  const circuit = useMemo(() => {
+    if (!tour) return null;
+    return circuits.find(c => c.id === tour.circuitId);
+  }, [circuits, tour]);
+
   useEffect(() => {
     // Clear selected customer when component unmounts or tour changes
     return () => {
@@ -70,16 +75,12 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
   }, [tourId, setSelectedCustomer, clearCart]);
   
   useEffect(() => {
-    if (tour && tour.status === 'planned') {
+    if (tour && tour.status === 'planned' && circuit) {
       addOrUpdateTour({ ...tour, status: 'in-progress' });
-      toast({ title: "Tour Started!", description: `You are now on the ${circuit?.name} tour.` });
+      toast({ title: "Tour Started!", description: `You are now on the ${circuit.name} tour.` });
     }
-  }, [tour, addOrUpdateTour, toast]);
+  }, [tour, circuit, addOrUpdateTour, toast]);
 
-  const circuit = useMemo(() => {
-    if (!tour) return null;
-    return circuits.find(c => c.id === tour.circuitId);
-  }, [circuits, tour]);
 
   const tourCustomers = useMemo(() => {
     if (!circuit) return [];
