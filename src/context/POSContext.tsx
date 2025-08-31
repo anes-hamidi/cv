@@ -74,11 +74,29 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   }, [products, sales, customers, isMounted]);
 
   const getPriceForCustomer = useCallback((product: Product, priceLevel: PriceLevel): number => {
-    if (product.priceLevels) {
-      return product.priceLevels[priceLevel] ?? product.price;
+    if (product.priceLevels && product.priceLevels[priceLevel]) {
+      return product.priceLevels[priceLevel];
     }
     return product.price;
   }, []);
+
+  // Update cart prices when selected customer changes
+  useEffect(() => {
+    if (cart.length > 0) {
+      setCart(currentCart => {
+        const newCart = currentCart.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          if (product) {
+            const newPrice = getPriceForCustomer(product, selectedCustomer?.priceLevel || 'retail');
+            return { ...item, price: newPrice };
+          }
+          return item;
+        });
+        return newCart;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomer, products, getPriceForCustomer]);
 
   // Products
   const addOrUpdateProduct = useCallback((product: Product) => {
@@ -112,7 +130,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
           toast({ title: "Stock Limit Reached", description: `You cannot add more of ${product.name}.`, variant: "destructive" });
           return prev;
         }
-        return prev.map((item) => item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map((item) => item.productId === product.id ? { ...item, quantity: item.quantity + 1, price: price } : item);
       }
       return [...prev, { productId: product.id, name: product.name, price: price, quantity: 1 }];
     });
