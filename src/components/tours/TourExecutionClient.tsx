@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   ShoppingBag,
   Search,
+  CheckCircle,
 } from "lucide-react";
 import type { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
