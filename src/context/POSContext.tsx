@@ -19,13 +19,13 @@ interface POSContextType {
   clearCart: () => void;
   sales: Sale[];
   setSales: Dispatch<SetStateAction<Sale[]>>;
-  completeSale: (customerId?: string) => Sale;
-  selectedCustomer: Customer | null;
-  setSelectedCustomer: Dispatch<SetStateAction<Customer | null>>;
-
+  completeSale: () => Sale;
   customers: Customer[];
+  setCustomers: Dispatch<SetStateAction<Customer[]>>;
   addOrUpdateCustomer: (customer: Customer) => void;
   deleteCustomer: (customerId: string) => void;
+  selectedCustomer: Customer | null;
+  setSelectedCustomer: Dispatch<SetStateAction<Customer | null>>;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -43,6 +43,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
 
   // Load data from localStorage
   useEffect(() => {
+    setIsMounted(true);
     try {
       const storedProducts = localStorage.getItem("pos-products");
       setProducts(storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS);
@@ -61,7 +62,6 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsDataReady(true);
     }
-    setIsMounted(true);
   }, []);
 
   // Save data to localStorage
@@ -129,15 +129,14 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = useCallback(() => setCart([]), []);
 
   // Sales
-  const completeSale = useCallback((customerId?: string): Sale => {
+  const completeSale = useCallback((): Sale => {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const saleCustomerId = customerId || selectedCustomer?.id;
     const newSale: Sale = {
       id: new Date().toISOString(),
       items: cart,
       total,
       date: new Date().toISOString(),
-      customerId: saleCustomerId,
+      customerId: selectedCustomer?.id,
     };
     setProducts(prevProducts => {
         const updatedProducts = [...prevProducts];
@@ -149,6 +148,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     });
     setSales((prev) => [newSale, ...prev]);
     clearCart();
+    setSelectedCustomer(null);
     return newSale;
   }, [cart, selectedCustomer, clearCart]);
 
@@ -170,11 +170,11 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
     products, setProducts, addOrUpdateProduct, deleteProduct,
     cart, addToCart, removeFromCart, updateCartItemQuantity, clearCart,
     sales, setSales, completeSale,
-    customers, addOrUpdateCustomer, deleteCustomer,
+    customers, setCustomers, addOrUpdateCustomer, deleteCustomer,
     selectedCustomer, setSelectedCustomer,
   };
 
-  return <POSContext.Provider value={value}>{children}</POSContext.Provider>;
+  return <POSContext.Provider value={value}>{isDataReady ? children : <div>Loading...</div>}</POSContext.Provider>;
 };
 
 export const usePOS = () => {

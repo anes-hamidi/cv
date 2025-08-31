@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { usePOS } from "@/context/POSContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +43,7 @@ export function CustomerList() {
   const { toast } = useToast();
 
 
-  const handleFormSubmit = (data: Omit<Customer, 'id'>) => {
+  const handleFormSubmit = useCallback((data: Omit<Customer, 'id' | 'sales'>) => {
     const customerData = {
       ...data,
       id: editingCustomer?.id || new Date().toISOString(),
@@ -55,17 +55,26 @@ export function CustomerList() {
     });
     setIsFormOpen(false);
     setEditingCustomer(undefined);
-  };
+  }, [addOrUpdateCustomer, editingCustomer, toast]);
   
-  const openEditDialog = (customer: Customer) => {
+  const openEditDialog = useCallback((customer: Customer) => {
     setEditingCustomer(customer);
     setIsFormOpen(true);
-  }
+  }, []);
   
-  const openNewDialog = () => {
+  const openNewDialog = useCallback(() => {
     setEditingCustomer(undefined);
     setIsFormOpen(true);
-  }
+  }, []);
+
+  const handleDelete = useCallback((customerId: string) => {
+    deleteCustomer(customerId);
+    toast({
+        title: "Customer Deleted",
+        description: "The customer has been successfully deleted.",
+        variant: "destructive"
+    })
+  }, [deleteCustomer, toast]);
 
   return (
     <div>
@@ -139,7 +148,7 @@ export function CustomerList() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteCustomer(customer.id)}>Continue</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDelete(customer.id)}>Continue</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>

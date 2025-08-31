@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { X, ShoppingCart, Trash2, Printer } from "lucide-react";
 import type { Sale } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
 export function Cart() {
   const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale, products, selectedCustomer } = usePOS();
@@ -27,7 +26,7 @@ export function Cart() {
       });
       return;
     }
-    const newSale = completeSale(selectedCustomer?.id);
+    const newSale = completeSale();
     toast({
       title: "Sale Completed!",
       description: `Total: ${newSale.total.toFixed(2)} DZ for ${selectedCustomer?.name || 'customer'}.`,
@@ -146,7 +145,7 @@ export function Cart() {
 
 
   return (
-    <Card className="flex flex-col flex-1 shadow-none border-0">
+    <Card className="flex flex-col flex-1 shadow-md border">
       <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
         <CardTitle className="font-headline text-xl flex items-center"><ShoppingCart className="mr-3 h-6 w-6 text-primary"/>Current Sale</CardTitle>
         {cart.length > 0 && (
