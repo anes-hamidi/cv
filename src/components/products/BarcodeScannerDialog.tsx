@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import type jsQR from "jsqr";
+import type { QRCode } from "jsqr";
+
 
 interface BarcodeScannerDialogProps {
   open: boolean;
@@ -28,7 +29,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const jsqr = useRef<typeof jsQR | null>(null);
+  const jsqr = useRef<((data: Uint8ClampedArray, width: number, height: number, options?: { inversionAttempts?: "dontInvert" | "onlyInvert" | "both"; }) => QRCode | null) | null>(null);
 
   useEffect(() => {
     import("jsqr").then(module => {
@@ -148,7 +149,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
               <AlertTitle>Camera Access Denied</AlertTitle>
               <AlertDescription>
                 Please enable camera permissions in your browser settings to use this feature.
-              </Aler>
+              </AlertDescription>
             </Alert>
           )}
         </div>

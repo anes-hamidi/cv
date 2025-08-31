@@ -14,7 +14,7 @@ import { usePOS } from "@/context/POSContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import type jsQR from "jsqr";
+import type { QRCode } from "jsqr";
 
 interface QRCodeScannerDialogProps {
   open: boolean;
@@ -29,7 +29,7 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const jsqr = useRef<typeof jsQR | null>(null);
+  const jsqr = useRef<((data: Uint8ClampedArray, width: number, height: number, options?: { inversionAttempts?: "dontInvert" | "onlyInvert" | "both"; }) => QRCode | null) | null>(null);
 
   useEffect(() => {
     import("jsqr").then(module => {
