@@ -6,21 +6,20 @@ import { useRouter } from "next/navigation";
 import { usePOS } from "@/context/POSContext";
 import { Cart } from "@/components/pos/Cart";
 import { ProductGrid } from "@/components/pos/ProductGrid";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
   Users,
   MapPin,
   Phone,
-  Play,
   Flag,
   ArrowLeft,
   ShoppingBag,
   Search,
   CheckCircle,
+  Route,
 } from "lucide-react";
 import type { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
+import { Separator } from "../ui/separator";
 
 interface TourExecutionClientProps {
   tourId: string;
@@ -67,7 +67,7 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
       setSelectedCustomer(null);
       clearCart();
     }
-  }, [tourId]);
+  }, [tourId, setSelectedCustomer, clearCart]);
   
   useEffect(() => {
     if (tour && tour.status === 'planned') {
@@ -83,7 +83,7 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
 
   const tourCustomers = useMemo(() => {
     if (!circuit) return [];
-    return customers.filter(c => c.id === circuit.id || c.circuitId === circuit.id);
+    return customers.filter(c => c.circuitId === circuit.id);
   }, [customers, circuit]);
 
   const filteredProducts = useMemo(() => {
@@ -130,13 +130,17 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
     <aside className="lg:col-span-1 xl:col-span-1 bg-background border-r flex flex-col">
         <CardHeader>
           <CardTitle className="font-headline text-xl flex items-center">
-            <Users className="mr-3 h-6 w-6 text-primary"/>
+            <Route className="mr-3 h-6 w-6 text-primary"/>
             {circuit.name}
           </CardTitle>
-          <p className="text-sm text-muted-foreground pt-1">
-            {tourCustomers.length} customer(s) in this circuit.
-          </p>
+          <div className="text-sm text-muted-foreground pt-1">
+            <div className="flex flex-wrap gap-1">
+              {circuit.municipalities.map(m => <Badge key={m} variant="secondary">{m}</Badge>)}
+            </div>
+          </div>
         </CardHeader>
+        <Separator />
+        <p className="p-4 text-sm font-medium text-muted-foreground">{tourCustomers.length} customer(s) in this tour</p>
         <ScrollArea className="flex-1">
             <div className="p-4 pt-0 space-y-2">
                 {tourCustomers.map(customer => (
@@ -218,7 +222,7 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <Users className="h-16 w-16 mb-4 text-muted-foreground" />
                 <h2 className="text-2xl font-bold font-headline">Select a Customer</h2>
-                <p className="text-muted-foreground">Choose a customer from the list to start a sale.</p>
+                <p className="text-muted-foreground">Choose a customer from the list on the left to start a sale.</p>
             </div>
         )}
       </main>
