@@ -7,6 +7,7 @@ import { INITIAL_PRODUCTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
 interface POSContextType {
+  isDataReady: boolean;
   products: Product[];
   setProducts: Dispatch<SetStateAction<Product[]>>;
   addOrUpdateProduct: (product: Product) => void;
@@ -43,7 +44,8 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   const [circuits, setCircuits] = useState<Circuit[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-
+  
+  const [isDataReady, setIsDataReady] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
 
@@ -72,6 +74,8 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
         setCustomers([]);
         setCircuits([]);
         setTours([]);
+    } finally {
+      setIsDataReady(true);
     }
     setIsMounted(true);
   }, []);
@@ -103,14 +107,15 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
 
   // Cart
   const addToCart = useCallback((product: Product) => {
-    if (product.stock <= 0) {
+    const p = products.find(p => p.id === product.id);
+    if (!p || p.stock <= 0) {
       toast({ title: "Out of Stock", description: `${product.name} is currently unavailable.`, variant: "destructive" });
       return;
     }
     setCart((prev) => {
       const existingItem = prev.find((item) => item.productId === product.id);
       if (existingItem) {
-        if (existingItem.quantity >= product.stock) {
+        if (existingItem.quantity >= p.stock) {
           toast({ title: "Stock Limit Reached", description: `You cannot add more of ${product.name}.`, variant: "destructive" });
           return prev;
         }
@@ -206,6 +211,7 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
 
 
   const value = {
+    isDataReady,
     products, setProducts, addOrUpdateProduct, deleteProduct,
     cart, addToCart, removeFromCart, updateCartItemQuantity, clearCart,
     sales, setSales, completeSale,

@@ -20,6 +20,7 @@ import {
   Search,
   CheckCircle,
   Route,
+  Loader2,
 } from "lucide-react";
 import type { Customer } from "@/types";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { 
+    isDataReady,
     tours, 
     circuits, 
     customers, 
@@ -74,12 +76,18 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
     }
   }, [tourId, setSelectedCustomer, clearCart]);
   
-  useEffect(() => {
+  const startTour = useCallback(() => {
     if (tour && tour.status === 'planned' && circuit) {
       addOrUpdateTour({ ...tour, status: 'in-progress' });
       toast({ title: "Tour Started!", description: `You are now on the ${circuit.name} tour.` });
     }
   }, [tour, circuit, addOrUpdateTour, toast]);
+  
+  useEffect(() => {
+    if (isDataReady) {
+      startTour();
+    }
+  }, [isDataReady, startTour]);
 
 
   const tourCustomers = useMemo(() => {
@@ -93,6 +101,16 @@ export function TourExecutionClient({ tourId }: TourExecutionClientProps) {
       product.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [products, searchQuery]);
+
+  if (!isDataReady) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <Loader2 className="h-16 w-16 mb-4 text-muted-foreground animate-spin" />
+            <h2 className="text-2xl font-bold font-headline">Loading Tour...</h2>
+            <p className="text-muted-foreground">Please wait while we get everything ready.</p>
+        </div>
+    )
+  }
 
   if (!tour || !circuit) {
     return (
