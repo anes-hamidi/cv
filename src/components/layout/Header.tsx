@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Package2, Home, List, BarChart, Menu, Settings, Users } from "lucide-react";
+import { Package2, Home, List, BarChart, Menu, Settings, Users, LineChart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ const mainLinks = [
   { href: "/products", label: "Products", icon: List },
   { href: "/sales", label: "Sales", icon: BarChart },
   { href: "/customers", label: "Customers", icon: Users },
+  { href: "/analysis", label: "Analysis", icon: LineChart },
 ];
 
 const settingsLink = { href: "/settings", label: "Settings", icon: Settings };
