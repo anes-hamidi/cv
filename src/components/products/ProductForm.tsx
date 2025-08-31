@@ -18,6 +18,7 @@ import type { Product } from "@/types";
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   price: z.coerce.number().min(0.01, "Price must be greater than 0."),
+  stock: z.coerce.number().min(0, "Stock can't be negative."),
   imageUrl: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
 });
 
@@ -33,6 +34,7 @@ export function ProductForm({ product, onSubmit, onClose }: ProductFormProps) {
     defaultValues: {
       name: product?.name || "",
       price: product?.price || 0,
+      stock: product?.stock || 0,
       imageUrl: product?.imageUrl || "",
     },
   });
@@ -46,7 +48,7 @@ export function ProductForm({ product, onSubmit, onClose }: ProductFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -60,19 +62,34 @@ export function ProductForm({ product, onSubmit, onClose }: ProductFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.01" placeholder="e.g., 2.50" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex gap-4">
+            <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+                <FormItem className="flex-1">
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                    <Input type="number" step="0.01" placeholder="e.g., 2.50" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="stock"
+            render={({ field }) => (
+                <FormItem className="flex-1">
+                <FormLabel>Stock</FormLabel>
+                <FormControl>
+                    <Input type="number" placeholder="e.g., 100" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
         <FormField
           control={form.control}
           name="imageUrl"
@@ -86,7 +103,7 @@ export function ProductForm({ product, onSubmit, onClose }: ProductFormProps) {
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
             <Button type="submit">{product ? "Save Changes" : "Create Product"}</Button>
         </div>

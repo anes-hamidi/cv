@@ -4,7 +4,7 @@
 import { usePOS } from "@/context/POSContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QrCode, Plus, Minus, Search, X } from "lucide-react";
+import { QrCode, Plus, Minus, Search, X, Ban } from "lucide-react";
 import type { Product } from "@/types";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ export function ProductListMobile({ onScanClick, products, searchQuery, setSearc
   };
 
   const handleQuantityChange = (product: Product, newQuantity: number) => {
+    if (product.stock <= 0 && newQuantity > 0) return;
+
     if (newQuantity > 0) {
       const cartItem = cart.find(item => item.productId === product.id);
       if (cartItem) {
@@ -77,12 +79,14 @@ export function ProductListMobile({ onScanClick, products, searchQuery, setSearc
         )}
         {products.map((product) => {
           const quantity = getCartQuantity(product.id);
+          const isOutOfStock = product.stock <= 0;
           return (
             <div 
               key={product.id} 
               className={cn(
-                "flex items-center gap-4 p-2 rounded-lg border bg-card transition-all duration-200",
-                quantity > 0 && "border-primary shadow-lg bg-primary/5"
+                "flex items-center gap-4 p-2 rounded-lg border bg-card transition-all duration-200 relative",
+                quantity > 0 && "border-primary shadow-lg bg-primary/5",
+                isOutOfStock && "opacity-50"
               )}
             >
               <Image
@@ -96,33 +100,45 @@ export function ProductListMobile({ onScanClick, products, searchQuery, setSearc
               <div className="flex-grow">
                 <p className="font-semibold">{product.name}</p>
                 <p className="text-sm text-primary">{product.price.toFixed(2)} DZ</p>
+                {product.stock > 0 && product.stock <= 10 && (
+                    <p className="text-xs text-destructive">{product.stock} left in stock</p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                    size="icon" 
-                    variant="outline" 
-                    className="h-8 w-8"
-                    onClick={() => handleQuantityChange(product, quantity - 1)}
-                    disabled={quantity === 0}
-                >
-                    <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  className="h-8 w-14 text-center"
-                  value={quantity}
-                  onChange={(e) => handleQuantityChange(product, parseInt(e.target.value) || 0)}
-                  onFocus={(e) => e.target.select()}
-                />
-                <Button 
-                    size="icon" 
-                    variant="outline" 
-                    className="h-8 w-8"
-                    onClick={() => handleQuantityChange(product, quantity + 1)}
-                >
-                    <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              {isOutOfStock ? (
+                <div className="flex items-center gap-2 text-destructive">
+                  <Ban className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Out of Stock</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button 
+                      size="icon" 
+                      variant="outline" 
+                      className="h-8 w-8"
+                      onClick={() => handleQuantityChange(product, quantity - 1)}
+                      disabled={quantity === 0}
+                  >
+                      <Minus className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="number"
+                    className="h-8 w-14 text-center"
+                    value={quantity}
+                    onChange={(e) => handleQuantityChange(product, parseInt(e.target.value) || 0)}
+                    onFocus={(e) => e.target.select()}
+                    max={product.stock}
+                  />
+                  <Button 
+                      size="icon" 
+                      variant="outline" 
+                      className="h-8 w-8"
+                      onClick={() => handleQuantityChange(product, quantity + 1)}
+                      disabled={quantity >= product.stock}
+                  >
+                      <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           );
         })}

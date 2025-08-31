@@ -35,6 +35,7 @@ import { ProductForm } from "./ProductForm";
 import type { Product } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export function ProductList() {
   const { products, addOrUpdateProduct, deleteProduct } = usePOS();
@@ -94,13 +95,14 @@ export function ProductList() {
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">No products found.</TableCell>
+                    <TableCell colSpan={5} className="h-24 text-center">No products found.</TableCell>
                 </TableRow>
             ) : (
                 products.map((product) => (
@@ -117,6 +119,13 @@ export function ProductList() {
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.price.toFixed(2)} DZ</TableCell>
+                    <TableCell>
+                      {product.stock > 0 ? (
+                        <Badge variant={product.stock < 10 ? "destructive" : "secondary"}>{product.stock} in stock</Badge>
+                      ) : (
+                        <Badge variant="destructive">Out of stock</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEditDialog(product)}>
                         <Edit className="h-4 w-4" />

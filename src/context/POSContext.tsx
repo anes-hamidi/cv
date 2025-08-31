@@ -76,9 +76,26 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addToCart = (product: Product) => {
+    if (product.stock <= 0) {
+      toast({
+        title: "Out of Stock",
+        description: `${product.name} is currently unavailable.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setCart((prev) => {
       const existingItem = prev.find((item) => item.productId === product.id);
       if (existingItem) {
+        if (existingItem.quantity >= product.stock) {
+          toast({
+            title: "Stock Limit Reached",
+            description: `You cannot add more of ${product.name}.`,
+            variant: "destructive",
+          });
+          return prev;
+        }
         return prev.map((item) =>
           item.productId === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -98,6 +115,18 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCartItemQuantity = (productId: string, quantity: number) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+
+    if (quantity > product.stock) {
+      toast({
+        title: "Stock Limit Reached",
+        description: `Only ${product.stock} of ${product.name} available.`,
+        variant: "destructive",
+      });
+      quantity = product.stock;
+    }
+
     if (quantity < 1) {
       removeFromCart(productId);
       return;
@@ -119,6 +148,19 @@ export const POSProvider = ({ children }: { children: ReactNode }) => {
       total,
       date: new Date().toISOString(),
     };
+
+    // Update stock
+    setProducts(prevProducts => {
+        const updatedProducts = [...prevProducts];
+        cart.forEach(cartItem => {
+            const productIndex = updatedProducts.findIndex(p => p.id === cartItem.productId);
+            if (productIndex !== -1) {
+                updatedProducts[productIndex].stock -= cartItem.quantity;
+            }
+        });
+        return updatedProducts;
+    });
+
     setSales((prev) => [newSale, ...prev]);
     clearCart();
     return newSale;
