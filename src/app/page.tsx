@@ -4,22 +4,33 @@
 import { Button } from "@/components/ui/button";
 import { Cart } from "@/components/pos/Cart";
 import { ProductGrid } from "@/components/pos/ProductGrid";
-import { QrCode, Boxes, ShoppingBag } from "lucide-react";
+import { QrCode, Boxes, ShoppingBag, Search } from "lucide-react";
 import { AIRecommender } from "@/components/pos/AIRecommender";
 import { QRCodeScannerDialog } from "@/components/pos/QRCodeScannerDialog";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProductListMobile } from "@/components/pos/ProductListMobile";
 import { usePOS } from "@/context/POSContext";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
   const { cart, products } = usePOS();
 
   const totalItemsInCart = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalProducts = products.length;
+
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery) {
+      return products;
+    }
+    return products.filter((product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [products, searchQuery]);
 
   const Counters = () => (
     <div className="grid grid-cols-2 gap-4">
@@ -45,7 +56,12 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
         <div className="md:col-span-2 space-y-4">
           <Counters />
-          <ProductListMobile onScanClick={() => setIsScannerOpen(true)} />
+          <ProductListMobile 
+            onScanClick={() => setIsScannerOpen(true)}
+            products={filteredProducts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
         </div>
         <div className="md:col-span-1">
           <div className="space-y-4">
@@ -65,8 +81,19 @@ export default function Home() {
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-0 h-[calc(100vh-3.5rem)] bg-muted/20">
       {/* Main Content - Product Grid */}
       <main className="lg:col-span-2 xl:col-span-3 flex flex-col">
-        <div className="p-4 md:p-6 flex justify-between items-center bg-background border-b">
+        <div className="p-4 md:p-6 flex flex-wrap gap-4 justify-between items-center bg-background border-b">
           <h1 className="text-2xl font-bold font-headline">Products</h1>
+          <div className="flex-1 min-w-[200px] max-w-sm">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
           <QRCodeScannerDialog
             open={isScannerOpen}
             onOpenChange={setIsScannerOpen}
@@ -81,7 +108,7 @@ export default function Home() {
           <div className="mb-6">
             <Counters />
           </div>
-          <ProductGrid />
+          <ProductGrid products={filteredProducts} />
         </div>
       </main>
 

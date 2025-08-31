@@ -3,15 +3,19 @@
 
 import { usePOS } from "@/context/POSContext";
 import { ProductCard } from "./ProductCard";
+import type { Product } from "@/types";
 
-export function ProductGrid() {
-  const { products } = usePOS();
+interface ProductGridProps {
+  products: Product[];
+}
+
+export function ProductGrid({ products }: ProductGridProps) {
 
   if (products.length === 0) {
     return (
       <div className="text-center py-10">
         <p className="text-muted-foreground">No products found.</p>
-        <p className="text-sm text-muted-foreground">Go to the Products page to add some.</p>
+        <p className="text-sm text-muted-foreground">Try adjusting your search or go to the Products page to add some.</p>
       </div>
     );
   }
