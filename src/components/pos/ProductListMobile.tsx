@@ -126,7 +126,7 @@ export function ProductListMobile({ onScanClick, products, searchQuery, setSearc
                     value={quantity}
                     onChange={(e) => handleQuantityChange(product, parseInt(e.target.value) || 0)}
                     onFocus={(e) => e.target.select()}
-                    max={product.stock}
+                    max={product.stock || 0}
                   />
                   <Button 
                       size="icon" 
