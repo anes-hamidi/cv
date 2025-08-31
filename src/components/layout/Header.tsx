@@ -2,10 +2,17 @@
 "use client";
 
 import Link from "next/link";
-import { Package2, Home, List, BarChart } from "lucide-react";
+import { Package2, Home, List, BarChart, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/", label: "POS", icon: Home },
@@ -23,7 +30,9 @@ export function Header() {
           <Package2 className="h-6 w-6 text-primary" />
           <span className="hidden font-bold font-headline md:inline">Liveryly</span>
         </Link>
-        <nav className="flex items-center space-x-1 text-sm font-medium">
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden items-center space-x-1 text-sm font-medium md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -47,6 +56,28 @@ export function Header() {
             </Link>
           ))}
         </nav>
+
+        {/* Mobile Navigation */}
+        <div className="flex-1 md:hidden flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {navLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link href={link.href} className={cn(pathname === link.href && "bg-accent")}>
+                    <link.icon className="mr-2 h-4 w-4" />
+                    {link.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );
