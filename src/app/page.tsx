@@ -4,21 +4,47 @@
 import { Button } from "@/components/ui/button";
 import { Cart } from "@/components/pos/Cart";
 import { ProductGrid } from "@/components/pos/ProductGrid";
-import { QrCode } from "lucide-react";
+import { QrCode, Boxes, ShoppingBag } from "lucide-react";
 import { AIRecommender } from "@/components/pos/AIRecommender";
 import { QRCodeScannerDialog } from "@/components/pos/QRCodeScannerDialog";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProductListMobile } from "@/components/pos/ProductListMobile";
+import { usePOS } from "@/context/POSContext";
+import { Card } from "@/components/ui/card";
 
 export default function Home() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { cart, products } = usePOS();
+
+  const totalItemsInCart = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalProducts = products.length;
+
+  const Counters = () => (
+    <div className="grid grid-cols-2 gap-4">
+      <Card className="p-4 flex items-center">
+        <ShoppingBag className="h-6 w-6 mr-4 text-primary" />
+        <div>
+          <p className="text-2xl font-bold">{totalItemsInCart}</p>
+          <p className="text-sm text-muted-foreground">Items in Cart</p>
+        </div>
+      </Card>
+      <Card className="p-4 flex items-center">
+        <Boxes className="h-6 w-6 mr-4 text-accent" />
+        <div>
+          <p className="text-2xl font-bold">{totalProducts}</p>
+          <p className="text-sm text-muted-foreground">Total Products</p>
+        </div>
+      </Card>
+    </div>
+  );
 
   if (isMobile) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-4">
+          <Counters />
           <ProductListMobile onScanClick={() => setIsScannerOpen(true)} />
         </div>
         <div className="md:col-span-1">
@@ -52,6 +78,9 @@ export default function Home() {
           </QRCodeScannerDialog>
         </div>
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="mb-6">
+            <Counters />
+          </div>
           <ProductGrid />
         </div>
       </main>

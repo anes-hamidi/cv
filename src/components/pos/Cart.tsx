@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export function Cart() {
-  const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale } = usePOS();
+  const { cart, removeFromCart, updateCartItemQuantity, clearCart, completeSale, products } = usePOS();
   const { toast } = useToast();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -57,6 +57,8 @@ export function Cart() {
       description: "Please select your Bluetooth printer from the list.",
     });
 
+    const totalItemsInCart = sale.items.reduce((sum, item) => sum + item.quantity, 0);
+
     let receiptText = "OfflinePOS Receipt\n";
     receiptText += "----------------------\n";
     receiptText += `Sale ID: ${sale.id.substring(0, 8)}...\n`;
@@ -68,6 +70,9 @@ export function Cart() {
     });
     receiptText += "----------------------\n";
     receiptText += `Total: ${sale.total.toFixed(2)} DZ\n\n`;
+    receiptText += `Total Items: ${totalItemsInCart}\n`;
+    receiptText += `Total Products: ${products.length}\n`;
+    receiptText += "----------------------\n";
     receiptText += "Thank you!\n\n\n";
 
     try {
