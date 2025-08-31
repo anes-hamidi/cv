@@ -7,6 +7,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 2.5,
     imageUrl: "https://picsum.photos/seed/espresso/400/225",
     stock: 100,
+    barcode: "849201829301",
   },
   {
     id: "prod_002",
@@ -14,6 +15,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 3.5,
     imageUrl: "https://picsum.photos/seed/latte/400/225",
     stock: 50,
+    barcode: "849201829302",
   },
   {
     id: "prod_003",
@@ -21,6 +23,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 3.5,
     imageUrl: "https://picsum.photos/seed/cappuccino/400/225",
     stock: 75,
+    barcode: "849201829303",
   },
   {
     id: "prod_004",
@@ -28,6 +31,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 3.0,
     imageUrl: "https://picsum.photos/seed/americano/400/225",
     stock: 80,
+    barcode: "849201829304",
   },
   {
     id: "prod_005",
@@ -35,6 +39,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 2.75,
     imageUrl: "https://picsum.photos/seed/croissant/400/225",
     stock: 40,
+    barcode: "849201829305",
   },
   {
     id: "prod_006",
@@ -42,6 +47,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 2.25,
     imageUrl: "https://picsum.photos/seed/muffin/400/225",
     stock: 30,
+    barcode: "849201829306",
   },
   {
     id: "prod_007",
@@ -49,6 +55,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 3.0,
     imageUrl: "https://picsum.photos/seed/brownie/400/225",
     stock: 0,
+    barcode: "849201829307",
   },
   {
     id: "prod_008",
@@ -56,5 +63,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     price: 2.5,
     imageUrl: "https://picsum.photos/seed/icedtea/400/225",
     stock: 60,
+    barcode: "849201829308",
   },
 ];

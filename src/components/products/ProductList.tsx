@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -67,7 +68,12 @@ export function ProductList() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold font-headline">Manage Products</h1>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
+          setIsFormOpen(isOpen);
+          if (!isOpen) {
+            setEditingProduct(undefined);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={openNewDialog}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Product
@@ -94,6 +100,7 @@ export function ProductList() {
             <TableRow>
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Barcode</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -102,7 +109,7 @@ export function ProductList() {
           <TableBody>
             {products.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">No products found.</TableCell>
+                    <TableCell colSpan={6} className="h-24 text-center">No products found.</TableCell>
                 </TableRow>
             ) : (
                 products.map((product) => (
@@ -118,6 +125,7 @@ export function ProductList() {
                     />
                     </TableCell>
                     <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="font-mono text-xs">{product.barcode || 'N/A'}</TableCell>
                     <TableCell>{product.price.toFixed(2)} DZ</TableCell>
                     <TableCell>
                       {product.stock > 0 ? (

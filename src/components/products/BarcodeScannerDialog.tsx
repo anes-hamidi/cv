@@ -10,20 +10,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { usePOS } from "@/context/POSContext";
 import { useToast } from "@/hooks/use-toast";
-import { Camera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-interface QRCodeScannerDialogProps {
+interface BarcodeScannerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onScan: (barcode: string) => void;
   children?: React.ReactNode;
 }
 
-export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScannerDialogProps) {
-  const { products, addToCart } = usePOS();
+export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: BarcodeScannerDialogProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -33,7 +31,6 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
     if (open) {
       const getCameraPermission = async () => {
         try {
-          // Check for permissions first
           const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
           if (permissionStatus.state === 'denied') {
             setHasCameraPermission(false);
@@ -55,46 +52,26 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
       getCameraPermission();
 
       return () => {
-        // Stop camera stream when dialog is closed
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
         }
-        if(videoRef.current) {
+        if (videoRef.current) {
             videoRef.current.srcObject = null;
         }
-      }
+      };
     }
   }, [open]);
 
   const handleSimulatedScan = () => {
-    // This simulates scanning a barcode and finding the corresponding product
-    if (products.length === 0) {
-      toast({
-        title: "No products available",
-        description: "Cannot simulate scan without products.",
-        variant: "destructive"
-      });
-      return;
-    }
-    // In a real app, a library like jsQR or zxing-js would decode the video stream.
-    // The result would be a product barcode or ID.
-    // For this simulation, we'll just pick a random product that has a barcode.
-    const productsWithBarcode = products.filter(p => p.barcode);
-    if(productsWithBarcode.length === 0) {
-        toast({
-            title: "No Products with Barcodes",
-            description: "There are no products with barcodes to simulate scanning.",
-            variant: "destructive"
-        });
-        return;
-    }
-    const randomProduct = productsWithBarcode[Math.floor(Math.random() * productsWithBarcode.length)];
-    addToCart(randomProduct);
+    // In a real app, you would use a library to decode the video stream.
+    // The result of the scan would be a barcode string.
+    // For this simulation, we'll just generate a random barcode number.
+    const randomBarcode = Math.random().toString().slice(2, 14);
+    onScan(randomBarcode);
     toast({
-      title: "Product Added",
-      description: `${randomProduct.name} was added to the cart.`,
+      title: "Barcode Scanned",
+      description: `Scanned value: ${randomBarcode}`,
     });
-    onOpenChange(false);
   };
 
   return (
@@ -102,24 +79,24 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
       {children}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Scan Barcode/QR Code</DialogTitle>
+          <DialogTitle className="font-headline">Scan Barcode</DialogTitle>
           <DialogDescription>
-            Point your camera at a product's barcode to add it to the cart.
+            Point your camera at a product's barcode to capture it.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <div className="aspect-video bg-secondary rounded-md flex items-center justify-center overflow-hidden">
-             {hasCameraPermission === null ? (
-                <div className="text-center text-muted-foreground">
-                    <p>Requesting camera access...</p>
-                </div>
-             ) : (
-                <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-             )}
+            {hasCameraPermission === null ? (
+              <div className="text-center text-muted-foreground">
+                <p>Requesting camera access...</p>
+              </div>
+            ) : (
+              <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+            )}
           </div>
 
           {hasCameraPermission === false && (
-             <Alert variant="destructive" className="mt-4">
+            <Alert variant="destructive" className="mt-4">
               <AlertTitle>Camera Access Denied</AlertTitle>
               <AlertDescription>
                 Please enable camera permissions in your browser settings to use this feature.
@@ -128,7 +105,7 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
           )}
 
           <p className="text-xs text-muted-foreground mt-2">
-            <strong>Note:</strong> Scanning is simulated. A real implementation would require a barcode decoding library.
+            <strong>Note:</strong> Scanning is simulated. A real implementation would use a library to decode the barcode from the camera stream.
           </p>
         </div>
         <DialogFooter>
