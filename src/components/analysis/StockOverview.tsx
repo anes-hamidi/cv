@@ -6,7 +6,7 @@ import type { Product } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PackageWarning } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 interface StockOverviewProps {
   products: Product[];
@@ -44,7 +44,7 @@ export function StockOverview({ products }: StockOverviewProps) {
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                    <PackageWarning className="h-10 w-10 mb-4" />
+                    <AlertTriangle className="h-10 w-10 mb-4" />
                     <p className="font-semibold">All products are well-stocked.</p>
                 </div>
             )}
