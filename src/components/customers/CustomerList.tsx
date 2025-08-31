@@ -36,6 +36,7 @@ import type { Customer, PriceLevel } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "../ui/scroll-area";
 
 const priceLevelLabels: Record<PriceLevel, string> = {
   retail: "Retail",
@@ -104,11 +105,13 @@ export function CustomerList() {
                 {editingCustomer ? "Edit Customer" : "Add New Customer"}
               </DialogTitle>
             </DialogHeader>
-            <CustomerForm
-              customer={editingCustomer}
-              onSubmit={handleFormSubmit}
-              onClose={() => setIsFormOpen(false)}
-            />
+            <ScrollArea className="max-h-[80vh] p-4">
+                <CustomerForm
+                customer={editingCustomer}
+                onSubmit={handleFormSubmit}
+                onClose={() => setIsFormOpen(false)}
+                />
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>

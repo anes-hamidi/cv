@@ -37,6 +37,7 @@ import type { Product } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "../ui/scroll-area";
 
 export function ProductList() {
   const { products, addOrUpdateProduct, deleteProduct } = usePOS();
@@ -85,11 +86,13 @@ export function ProductList() {
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </DialogTitle>
             </DialogHeader>
-            <ProductForm
-              product={editingProduct}
-              onSubmit={handleFormSubmit}
-              onClose={() => setIsFormOpen(false)}
-            />
+            <ScrollArea className="max-h-[80vh] p-4">
+                <ProductForm
+                product={editingProduct}
+                onSubmit={handleFormSubmit}
+                onClose={() => setIsFormOpen(false)}
+                />
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>

@@ -148,7 +148,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
               <AlertTitle>Camera Access Denied</AlertTitle>
               <AlertDescription>
                 Please enable camera permissions in your browser settings to use this feature.
-              </AlertDescription>
+              </Aler>
             </Alert>
           )}
         </div>
