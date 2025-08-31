@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import type jsQR from "jsqr";
 
 interface BarcodeScannerDialogProps {
   open: boolean;
@@ -24,11 +25,65 @@ interface BarcodeScannerDialogProps {
 export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: BarcodeScannerDialogProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const jsqr = useRef<typeof jsQR | null>(null);
+
+  useEffect(() => {
+    import("jsqr").then(module => {
+      jsqr.current = module.default;
+    });
+  }, []);
+
+
+  const handleScan = useCallback((code: string) => {
+    onScan(code);
+    onOpenChange(false);
+  }, [onScan, onOpenChange]);
+
+  useEffect(() => {
+    let animationFrameId: number | null = null;
+
+    const tick = () => {
+      if (jsqr.current && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          canvas.height = video.videoHeight;
+          canvas.width = video.videoWidth;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsqr.current(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+
+          if (code) {
+            setIsScanning(false);
+            handleScan(code.data);
+          }
+        }
+      }
+      if (isScanning) {
+        animationFrameId = requestAnimationFrame(tick);
+      }
+    };
+
+    if (open && isScanning) {
+      animationFrameId = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [open, isScanning, handleScan]);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
     if (open) {
+      setIsScanning(false); // Reset scanning state
       const getCameraPermission = async () => {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
@@ -42,6 +97,9 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
 
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+             videoRef.current.addEventListener('loadeddata', () => {
+                setIsScanning(true);
+            });
           }
         } catch (error) {
           console.error('Error accessing camera:', error);
@@ -52,27 +110,16 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
       getCameraPermission();
 
       return () => {
+        setIsScanning(false);
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
         }
         if (videoRef.current) {
-            videoRef.current.srcObject = null;
+          videoRef.current.srcObject = null;
         }
       };
     }
   }, [open]);
-
-  const handleSimulatedScan = () => {
-    // In a real app, you would use a library to decode the video stream.
-    // The result of the scan would be a barcode string.
-    // For this simulation, we'll just generate a random barcode number.
-    const randomBarcode = Math.random().toString().slice(2, 14);
-    onScan(randomBarcode);
-    toast({
-      title: "Barcode Scanned",
-      description: `Scanned value: ${randomBarcode}`,
-    });
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +141,7 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
               <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
             )}
           </div>
+           <canvas ref={canvasRef} style={{ display: 'none' }} />
 
           {hasCameraPermission === false && (
             <Alert variant="destructive" className="mt-4">
@@ -103,14 +151,9 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, children }: B
               </AlertDescription>
             </Alert>
           )}
-
-          <p className="text-xs text-muted-foreground mt-2">
-            <strong>Note:</strong> Scanning is simulated. A real implementation would use a library to decode the barcode from the camera stream.
-          </p>
         </div>
         <DialogFooter>
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button type="button" onClick={handleSimulatedScan}>Simulate Scan</Button>
+           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

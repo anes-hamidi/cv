@@ -12,9 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePOS } from "@/context/POSContext";
 import { useToast } from "@/hooks/use-toast";
-import { Camera } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import type jsQR from "jsqr";
 
 interface QRCodeScannerDialogProps {
   open: boolean;
@@ -26,14 +26,77 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
   const { products, addToCart } = usePOS();
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const jsqr = useRef<typeof jsQR | null>(null);
+
+  useEffect(() => {
+    import("jsqr").then(module => {
+      jsqr.current = module.default;
+    });
+  }, []);
+
+  const handleScan = useCallback((code: string) => {
+    const product = products.find(p => p.barcode === code);
+    if (product) {
+      addToCart(product);
+      onOpenChange(false);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Product Not Found",
+        description: `No product found with barcode: ${code}`,
+      });
+    }
+  }, [products, addToCart, toast, onOpenChange]);
+  
+  useEffect(() => {
+    let animationFrameId: number | null = null;
+
+    const tick = () => {
+        if (jsqr.current && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext("2d");
+
+            if (ctx) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsqr.current(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+
+                if (code) {
+                    setIsScanning(false);
+                    handleScan(code.data);
+                }
+            }
+        }
+        if(isScanning){
+            animationFrameId = requestAnimationFrame(tick);
+        }
+    };
+
+
+    if (open && isScanning) {
+        animationFrameId = requestAnimationFrame(tick);
+    }
+
+    return () => {
+        if(animationFrameId) cancelAnimationFrame(animationFrameId);
+    }
+  }, [open, isScanning, handleScan]);
+
 
   useEffect(() => {
     let stream: MediaStream | null = null;
     if (open) {
+      setIsScanning(false); // Reset scanning state
       const getCameraPermission = async () => {
         try {
-          // Check for permissions first
           const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
           if (permissionStatus.state === 'denied') {
             setHasCameraPermission(false);
@@ -42,9 +105,12 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
 
           stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
           setHasCameraPermission(true);
-
+          
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.addEventListener('loadeddata', () => {
+                setIsScanning(true);
+            });
           }
         } catch (error) {
           console.error('Error accessing camera:', error);
@@ -55,7 +121,7 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
       getCameraPermission();
 
       return () => {
-        // Stop camera stream when dialog is closed
+        setIsScanning(false);
         if (stream) {
           stream.getTracks().forEach(track => track.stop());
         }
@@ -65,37 +131,6 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
       }
     }
   }, [open]);
-
-  const handleSimulatedScan = () => {
-    // This simulates scanning a barcode and finding the corresponding product
-    if (products.length === 0) {
-      toast({
-        title: "No products available",
-        description: "Cannot simulate scan without products.",
-        variant: "destructive"
-      });
-      return;
-    }
-    // In a real app, a library like jsQR or zxing-js would decode the video stream.
-    // The result would be a product barcode or ID.
-    // For this simulation, we'll just pick a random product that has a barcode.
-    const productsWithBarcode = products.filter(p => p.barcode);
-    if(productsWithBarcode.length === 0) {
-        toast({
-            title: "No Products with Barcodes",
-            description: "There are no products with barcodes to simulate scanning.",
-            variant: "destructive"
-        });
-        return;
-    }
-    const randomProduct = productsWithBarcode[Math.floor(Math.random() * productsWithBarcode.length)];
-    addToCart(randomProduct);
-    toast({
-      title: "Product Added",
-      description: `${randomProduct.name} was added to the cart.`,
-    });
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,6 +152,7 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
              )}
           </div>
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
 
           {hasCameraPermission === false && (
              <Alert variant="destructive" className="mt-4">
@@ -127,13 +163,9 @@ export function QRCodeScannerDialog({ open, onOpenChange, children }: QRCodeScan
             </Alert>
           )}
 
-          <p className="text-xs text-muted-foreground mt-2">
-            <strong>Note:</strong> Scanning is simulated. A real implementation would require a barcode decoding library.
-          </p>
         </div>
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button type="button" onClick={handleSimulatedScan}>Simulate Scan</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
