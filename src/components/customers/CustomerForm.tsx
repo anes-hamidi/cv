@@ -119,7 +119,6 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="">None</SelectItem>
                         {circuits.map(circuit => (
                             <SelectItem key={circuit.id} value={circuit.id}>{circuit.name}</SelectItem>
                         ))}
@@ -137,4 +136,3 @@ export function CustomerForm({ customer, onSubmit, onClose }: CustomerFormProps)
     </Form>
   );
 }
-
